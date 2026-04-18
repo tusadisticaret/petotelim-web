@@ -27,7 +27,7 @@ export default function ExpensesPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data: biz } = await supabase.from('businesses').select('id').eq('user_id', user.id).single()
+      const { data: biz } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
       setBusinessId(biz?.id ?? '')
       const { data } = await supabase.from('expenses').select('*').eq('business_id', biz?.id).order('date', { ascending: false })
       setExpenses(data ?? [])

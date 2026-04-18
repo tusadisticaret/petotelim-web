@@ -7,7 +7,7 @@ export default async function AccountingPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: business } = await supabase.from('businesses').select('id').eq('user_id', user.id).single()
+  const { data: business } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
   const bid = business?.id
 
   const now = new Date()

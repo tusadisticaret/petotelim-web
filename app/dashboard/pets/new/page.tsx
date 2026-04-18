@@ -24,7 +24,7 @@ export default function NewPetPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data: business } = await supabase.from('businesses').select('id').eq('user_id', user.id).single()
+      const { data: business } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
       const { data } = await supabase.from('customers').select('id, name').eq('business_id', business?.id).order('name')
       setCustomers(data ?? [])
     }
@@ -42,7 +42,7 @@ export default function NewPetPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
-    const { data: business } = await supabase.from('businesses').select('id').eq('user_id', user.id).single()
+    const { data: business } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
     const { error } = await supabase.from('pets').insert({
       business_id: business?.id,
       customer_id: form.customer_id || null,

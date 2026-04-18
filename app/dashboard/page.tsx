@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: business } = await supabase.from('businesses').select('id, name').eq('user_id', user.id).single()
+  const { data: business } = await supabase.from('businesses').select('id, name').eq('owner_user_id', user.id).single()
   const bid = business?.id
 
   const today = new Date().toISOString().split('T')[0]

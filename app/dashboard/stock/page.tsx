@@ -30,7 +30,7 @@ export default function StockPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data: biz } = await supabase.from('businesses').select('id').eq('user_id', user.id).single()
+    const { data: biz } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
     setBusinessId(biz?.id ?? '')
     const { data } = await supabase.from('stock_items').select('*').eq('business_id', biz?.id).eq('is_active', true).order('name')
     setItems(data ?? [])

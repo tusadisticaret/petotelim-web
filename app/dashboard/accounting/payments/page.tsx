@@ -14,7 +14,7 @@ export default function PaymentsPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data: biz } = await supabase.from('businesses').select('id').eq('user_id', user.id).single()
+      const { data: biz } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
       const { data } = await supabase
         .from('sales_invoices')
         .select('*')

@@ -321,7 +321,7 @@ export default function AIPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data: biz } = await supabase.from('businesses').select('id').eq('user_id', user.id).single()
+    const { data: biz } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
     const bid = biz?.id
     const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
     const today = new Date().toISOString().split('T')[0]

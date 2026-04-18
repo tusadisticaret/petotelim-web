@@ -10,7 +10,7 @@ export default async function DaycarePage() {
   const { data: business } = await supabase
     .from('businesses')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('owner_user_id', user.id)
     .single()
 
   const { data: activePackages } = await supabase

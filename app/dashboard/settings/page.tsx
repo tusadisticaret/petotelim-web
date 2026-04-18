@@ -24,7 +24,7 @@ export default function SettingsPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data: biz } = await supabase.from('businesses').select('*').eq('user_id', user.id).single()
+    const { data: biz } = await supabase.from('businesses').select('*').eq('owner_user_id', user.id).single()
     if (!biz) return
     setBusinessId(biz.id)
     setBusinessName(biz.name ?? '')
