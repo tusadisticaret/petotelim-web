@@ -65,6 +65,12 @@ const navSections = [
       { href: '/dashboard/stock', label: 'Urun Listesi', icon: '📦' },
     ]
   },
+  {
+  title: 'Sistem',
+  items: [
+    { href: '/dashboard/settings', label: 'Ayarlar', icon: '⚙️' },
+  ]
+},
 ]
 
 interface Props {
