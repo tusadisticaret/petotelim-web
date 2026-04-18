@@ -30,7 +30,7 @@ const navSections = [
       { href: '/dashboard/stays/checkin', label: 'Check-in', icon: '⬇️' },
      { href: '/dashboard/stays', label: 'Uzun Konaklama', icon: '🏨' },
       { href: '/dashboard/stays/checkout', label: 'Check-out', icon: '⬆️' },
-      { href: '/dashboard/reservations', label: 'Rezervasyonlar', icon: '📅' },
+      { href: '/dashboard/stays/reservations', label: 'Rezervasyonlar', icon: '📅' },
     ]
   },
 {
