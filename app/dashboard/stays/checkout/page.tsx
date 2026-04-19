@@ -12,7 +12,7 @@ type Stay = {
   daily_price: number
   notes: string
   status: string
-  pets: { name: string; species: string; breed: string }
+  pets: { name: string; species: string; breed: string; owner_full_name: string | null; owner_phone: string | null; customers: { full_name: string | null; phone: string | null } | null } | null
   
 }
 
