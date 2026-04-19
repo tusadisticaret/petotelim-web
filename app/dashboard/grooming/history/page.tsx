@@ -70,9 +70,10 @@ export default function GroomingHistoryPage() {
     setShowDatePicker(false)
   }
 
-  function fmtDate(iso: string) {
-    return new Date(iso + 'T12:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  }
+function fmtDate(iso: string) {
+  if (!iso) return '?'
+  return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
   function fmtCurrency(v: number) {
     return v.toLocaleString('tr-TR', { minimumFractionDigits: 2 })
@@ -90,7 +91,7 @@ export default function GroomingHistoryPage() {
       let k = ''
       if (key === 'byName') k = e.pet_name?.trim() || 'Isimsiz'
       else if (key === 'byDate') {
-        const d = new Date(e.service_date + 'T12:00:00')
+       const d = new Date(e.service_date)
         k = d.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
       } else k = e.kind === 'trim' ? 'Tiras' : 'Yikama'
       if (!groups[k]) groups[k] = []
@@ -109,7 +110,11 @@ export default function GroomingHistoryPage() {
   }
 
   const groups = groupBy(groupMode)
-  const groupKeys = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'tr'))
+  const groupKeys = Object.keys(groups).sort((a, b) => {
+  const dateA = groups[a][0]?.service_date ? new Date(groups[a][0].service_date).getTime() : 0
+  const dateB = groups[b][0]?.service_date ? new Date(groups[b][0].service_date).getTime() : 0
+  return dateB - dateA
+})
 
   const cardStyle: React.CSSProperties = { backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px', padding: '20px' }
   const sectionTitle: React.CSSProperties = { fontSize: '17px', fontWeight: 600, color: '#000', margin: '0 0 14px' }

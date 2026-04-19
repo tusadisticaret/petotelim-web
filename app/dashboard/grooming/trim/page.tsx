@@ -35,9 +35,9 @@ export default function WashEntryPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('pets')
-        .select('id, name, species, breed, customers(id, name, phone)')
+        .select('id, name, species, breed, customers(id, full_name, phone)')
         .eq('business_id', businessId)
-        .ilike('name', `%${search}%`)
+        .or(`name.ilike.%${search}%,owner_full_name.ilike.%${search}%,owner_phone.ilike.%${search}%`)
         .limit(10)
       setSearchResults(data ?? [])
     }, 300)
@@ -59,7 +59,7 @@ export default function WashEntryPage() {
       business_id: businessId,
       pet_id: selectedPet.id,
       pet_name: selectedPet.name,
-      owner_name: selectedPet.customers?.name ?? '',
+      owner_name: selectedPet.customers?.full_name ?? selectedPet.owner_full_name ?? '',
       kind: 'trim',
       species: form.species,
       size: form.size,
@@ -115,7 +115,7 @@ export default function WashEntryPage() {
                 <span style={{ fontSize: '18px' }}>{pet.species === 'cat' ? '🐱' : '🐶'}</span>
                 <div>
                   <p style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: 0 }}>{pet.name}</p>
-                  <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{pet.customers?.name ?? ''}</p>
+                  <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{pet.customers?.full_name ?? ''}</p>
                 </div>
               </div>
             ))}
@@ -132,7 +132,7 @@ export default function WashEntryPage() {
             <span style={{ fontSize: '24px' }}>{selectedPet.species === 'cat' ? '🐱' : '🐶'}</span>
             <div>
               <p style={{ fontSize: '15px', fontWeight: 600, color: '#007AFF', margin: 0 }}>{selectedPet.name}</p>
-              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{selectedPet.customers?.name ?? ''} {selectedPet.breed ? '• ' + selectedPet.breed : ''}</p>
+              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{selectedPet.customers?.full_name ?? ''} {selectedPet.breed ? '• ' + selectedPet.breed : ''}</p>
             </div>
           </div>
           <div>

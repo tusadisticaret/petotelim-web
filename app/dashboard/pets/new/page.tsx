@@ -12,7 +12,7 @@ export default function NewPetPage() {
   const [form, setForm] = useState({
     name: '', species: 'dog', breed: '', gender: 'male',
     weight: '', color: '', is_neutered: false, is_aggressive: false,
-    owner_name: '', owner_tckn: '', owner_phone: '', owner_address: '',
+    owner_full_name: '', owner_tckn: '', owner_phone: '', owner_address: '',
     microchip_no: '', passport_no: '', allergy_notes: '', medication_notes: '',
     food_brand: '', daily_meals: '', meal_portion: '',
     vet_name: '', vet_phone: '', notes: '',
@@ -54,7 +54,7 @@ export default function NewPetPage() {
       color: form.color || null,
       is_neutered: form.is_neutered,
       is_aggressive: form.is_aggressive,
-      owner_name: form.owner_name || null,
+      owner_full_name: form.owner_full_name || null,
       owner_tckn: form.owner_tckn || null,
       owner_phone: form.owner_phone || null,
       owner_address: form.owner_address || null,
@@ -171,12 +171,12 @@ export default function NewPetPage() {
             <label style={labelStyle}>Sahip (Mevcut Musteri)</label>
             <select value={form.customer_id} onChange={e=>set('customer_id',e.target.value)} style={{...inputStyle,color:form.customer_id?'#000':'#C7C7CC'}}>
               <option value=''>Secin</option>
-              {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+              {customers.map(c=><option key={c.id} value={c.id}>{c.full_name}</option>)}
             </select>
           </div>
           <div style={rowStyle}>
             <label style={labelStyle}>Sahip Ad Soyad</label>
-            <input value={form.owner_name} onChange={e=>set('owner_name',e.target.value)} placeholder='Ad Soyad' style={inputStyle} />
+            <input value={form.owner_full_name} onChange={e=>set('owner_full_name',e.target.value)} placeholder='Ad Soyad' style={inputStyle} />
           </div>
           <div style={rowStyle}>
             <label style={labelStyle}>TCKN</label>

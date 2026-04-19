@@ -30,7 +30,7 @@ export default function ReservationsPage() {
     const q = petSearch.toLowerCase()
     setFilteredPets(pets.filter(p =>
       p.name?.toLowerCase().includes(q) ||
-      (p.owner_name ?? p.customers?.full_name ?? '').toLowerCase().includes(q) ||
+      (p.owner_full_name ?? p.customers?.full_name ?? '').toLowerCase().includes(q) ||
       (p.owner_phone ?? '').toLowerCase().includes(q)
     ).slice(0, 8))
   }, [petSearch, pets])
@@ -47,9 +47,9 @@ export default function ReservationsPage() {
     const [{ data: resData }, { data: petsData }] = await Promise.all([
       supabase.from('stays').select(`
         id, pet_id, check_in_date, planned_check_out_date, daily_price, notes,
-        pets(id, name, species, breed, owner_name, owner_phone, customers(full_name, phone))
+        pets(id, name, species, breed, owner_full_name, owner_phone, customers(full_name, phone))
       `).eq('business_id', bid).eq('is_reservation', true).order('check_in_date'),
-      supabase.from('pets').select('id, name, species, breed, owner_name, owner_phone, customers(full_name, phone)').eq('business_id', bid).order('name')
+      supabase.from('pets').select('id, name, species, breed, owner_full_name, owner_phone, customers(full_name, phone)').eq('business_id', bid).order('name')
     ])
 
     setReservations(resData ?? [])
@@ -176,7 +176,7 @@ export default function ReservationsPage() {
                   {filteredPets.map((pet, i) => (
                     <div key={pet.id} onClick={() => { setSelectedPet(pet); setPetSearch(pet.name); setFilteredPets([]) }} style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: i < filteredPets.length - 1 ? '1px solid #F2F2F7' : 'none' }}>
                       <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 2px' }}>{pet.name}</p>
-                      <p style={{ fontSize: '12px', color: '#6C6C70', margin: 0 }}>{pet.customers?.full_name ?? pet.owner_name ?? ''} • {pet.species ?? ''}</p>
+                      <p style={{ fontSize: '12px', color: '#6C6C70', margin: 0 }}>{pet.customers?.full_name ?? pet.owner_full_name ?? ''} • {pet.species ?? ''}</p>
                     </div>
                   ))}
                 </div>
@@ -189,7 +189,7 @@ export default function ReservationsPage() {
         {selectedPet && (
           <div style={{ padding: '10px 14px', backgroundColor: '#F0F7FF', borderRadius: '10px', marginBottom: '12px' }}>
             <p style={{ fontSize: '14px', fontWeight: 600, margin: '0 0 2px' }}>{selectedPet.name}</p>
-            <p style={{ fontSize: '12px', color: '#6C6C70', margin: 0 }}>{selectedPet.customers?.full_name ?? selectedPet.owner_name ?? 'Sahip yok'} • {selectedPet.species ?? ''}</p>
+            <p style={{ fontSize: '12px', color: '#6C6C70', margin: 0 }}>{selectedPet.customers?.full_name ?? selectedPet.owner_full_name ?? 'Sahip yok'} • {selectedPet.species ?? ''}</p>
           </div>
         )}
       </div>
@@ -266,7 +266,7 @@ export default function ReservationsPage() {
             <p style={{ fontSize: '14px', color: '#6C6C70', margin: 0 }}>Bu filtreye uygun rezervasyon yok</p>
           </div>
         ) : filtered.map(r => {
-          const ownerName = r.pets?.owner_name || r.pets?.customers?.full_name || 'Sahip yok'
+          const ownerName = r.pets?.owner_full_name || r.pets?.customers?.full_name || 'Sahip yok'
           const ci = r.check_in_date?.split('T')[0] ?? ''
           const co = r.planned_check_out_date?.split('T')[0] ?? ''
           const n = ci && co ? Math.max(0, Math.ceil((new Date(co).getTime() - new Date(ci).getTime()) / 86400000)) : 0

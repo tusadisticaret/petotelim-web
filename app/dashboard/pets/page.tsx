@@ -7,17 +7,23 @@ export default async function PetsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: business } = await supabase
-    .from('businesses')
-    .select('id')
-    .eq('owner_user_id', user.id)
-    .single()
+const { data: business } = await supabase
+  .from('businesses')
+  .select('id')
+  .eq('owner_user_id', user.id)
+  .single()
 
-  const { data: pets } = await supabase
-    .from('pets')
-    .select('*, customers(name)')
-    .eq('business_id', business?.id)
-    .order('created_at', { ascending: false })
+console.log('USER ID:', user?.id)
+console.log('BUSINESS:', business)
+
+const { data: pets, error: petsError } = await supabase
+  .from('pets')
+  .select('*, customers(full_name, phone)')
+  .eq('business_id', business?.id)
+  .order('created_at', { ascending: false })
+
+console.log('PETS:', pets)
+console.log('PETS ERROR:', petsError)
 
   return (
     <div style={{padding:'32px',maxWidth:'900px'}}>

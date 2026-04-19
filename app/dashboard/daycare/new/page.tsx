@@ -53,7 +53,7 @@ export default function DaycareNewPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('pets')
-        .select('id, name, species, breed, customers(id, name)')
+        .select('id, name, species, breed, customers(id, full_name)')
         .eq('business_id', businessId)
         .ilike('name', `%${search}%`)
         .limit(10)

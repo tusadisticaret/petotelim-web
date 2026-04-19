@@ -35,7 +35,7 @@ export default function LongStayPage() {
     const q = search.toLowerCase()
     setFilteredPets(pets.filter(p =>
       p.name?.toLowerCase().includes(q) ||
-      (p.owner_name ?? p.customers?.full_name ?? '').toLowerCase().includes(q) ||
+      (p.owner_full_name ?? p.customers?.full_name ?? '').toLowerCase().includes(q) ||
       (p.owner_phone ?? '').toLowerCase().includes(q) ||
       (p.breed ?? '').toLowerCase().includes(q)
     ).slice(0, 8))
@@ -51,7 +51,7 @@ export default function LongStayPage() {
     setBusinessId(bid)
 
     const [{ data: petsData }, { data: plansData }, { data: periodsData }] = await Promise.all([
-      supabase.from('pets').select('id, name, species, breed, owner_name, owner_phone, customers(full_name, phone)').eq('business_id', bid).order('name'),
+      supabase.from('pets').select('id, name, species, breed, owner_full_name, owner_phone, customers(full_name, phone)').eq('business_id', bid).order('name'),
       supabase.from('long_stay_plans').select('id, business_id, pet_id, start_date, end_date, price_monthly, notes, is_active, pets(id, name, species, breed, customers(full_name, phone, tckn))').eq('business_id', bid).eq('is_active', true).order('start_date'),
       supabase.from('long_stay_periods').select('id, business_id, plan_id, pet_id, period_start, period_end, net_total, notes').eq('business_id', bid).gte('period_start', from).lte('period_start', to).order('period_start', { ascending: false })
     ])
@@ -167,7 +167,7 @@ export default function LongStayPage() {
                 {filteredPets.map((pet, i) => (
                   <div key={pet.id} onClick={() => selectPet(pet)} style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: i < filteredPets.length - 1 ? '1px solid #F2F2F7' : 'none', backgroundColor: selectedPet?.id === pet.id ? '#F0F7FF' : '#fff' }}>
                     <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 2px' }}>{pet.name}</p>
-                    <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{pet.customers?.full_name ?? pet.owner_name ?? ''} • {pet.species ?? ''} {pet.breed ? `• ${pet.breed}` : ''}</p>
+                    <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{pet.customers?.full_name ?? pet.owner_full_name ?? ''} • {pet.species ?? ''} {pet.breed ? `• ${pet.breed}` : ''}</p>
                   </div>
                 ))}
               </div>
@@ -184,7 +184,7 @@ export default function LongStayPage() {
         {selectedPet ? (
           <div style={{ padding: '12px', backgroundColor: '#F0F7FF', borderRadius: '12px', marginBottom: '16px' }}>
             <p style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px' }}>{selectedPet.name}</p>
-            <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{selectedPet.customers?.full_name ?? selectedPet.owner_name ?? 'Sahip yok'} • {selectedPet.species ?? ''}</p>
+            <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{selectedPet.customers?.full_name ?? selectedPet.owner_full_name ?? 'Sahip yok'} • {selectedPet.species ?? ''}</p>
           </div>
         ) : (
           <p style={{ color: '#6C6C70', fontSize: '14px', marginBottom: '16px' }}>Önce bir evcil hayvan seç.</p>

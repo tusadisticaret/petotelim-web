@@ -75,7 +75,7 @@ export default function GroomingReservationsPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('pets')
-        .select('id, name, species, breed, customers(id, name, phone)')
+        .select('id, name, species, breed, customers(id, full_name, phone)')
         .eq('business_id', businessId)
         .ilike('name', `%${search}%`)
         .limit(10)

@@ -111,8 +111,8 @@ function generateStayInsight(stays: any[]): AIInsight {
   const validStays = stays.filter(s => !s.is_deleted)
   const activeStays = validStays.filter(s => !s.is_reservation && !s.actual_checkout_date)
   const reservations = validStays.filter(s => s.is_reservation)
-  const dueTodayCheckouts = activeStays.filter(s => s.checkout_date === today)
-  const overdueCheckouts = activeStays.filter(s => s.checkout_date && s.checkout_date < today)
+  const dueTodayCheckouts = activeStays.filter(s => s.actual_check_out_date === today)
+  const overdueCheckouts = activeStays.filter(s => s.actual_check_out_date && s.actual_check_out_date < today)
   const totalRecords = activeStays.length + reservations.length
 
   const level: Level = totalRecords < 6 ? 'basic' : totalRecords < 20 ? 'mid' : 'full'
@@ -237,9 +237,9 @@ function buildCustomerBundle(invoices: any[], stays: any[]) {
   }
 
   for (const stay of stays.filter(s => !s.is_deleted)) {
-    const name = stay.owner_name?.trim() || 'Sahip yok'
+    const name = stay.owner_full_name?.trim() || 'Sahip yok'
     merge(name, stay.owner_phone ?? '', stay.pet_name ?? '', stay.total_amount ?? 0,
-      parseDate(stay.checkout_date), 'Konaklama')
+      parseDate(stay.actual_check_out_date), 'Konaklama')
   }
 
   const customers = Array.from(map.values())
@@ -361,7 +361,7 @@ export default function AIPage() {
       activeStays: activeStays.length,
       unpaidCount: unpaid.length,
       unpaidTotal: unpaid.reduce((s: number, i: any) => s + (i.total_amount ?? 0), 0),
-      overdueCount: activeStays.filter((s: any) => s.checkout_date && s.checkout_date < today).length,
+      overdueCount: activeStays.filter((s: any) => s.actual_check_out_date && s.actual_check_out_date < today).length,
     }
 
     setData({

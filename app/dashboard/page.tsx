@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     { data: grooming },
     { data: daycarePackages },
   ] = await Promise.all([
-    supabase.from('stays').select('*').eq('business_id', bid).is('actual_checkout_date', null).neq('status', 'reservation'),
+    supabase.from('stays').select('*').eq('business_id', bid).is('actual_checkout_date', null),
     supabase.from('sales_invoices').select('*').eq('business_id', bid),
     supabase.from('pets').select('id').eq('business_id', bid),
     supabase.from('customers').select('id').eq('business_id', bid),
@@ -31,8 +31,8 @@ export default async function DashboardPage() {
   ])
 
   const activeStays = (stays ?? []).filter((s: any) => !s.is_reservation)
-  const todayCheckouts = activeStays.filter((s: any) => s.checkout_date === today)
-  const overdueStays = activeStays.filter((s: any) => s.checkout_date && s.checkout_date < today)
+  const todayCheckouts = activeStays.filter((s: any) => s.actual_check_out_date === today)
+  const overdueStays = activeStays.filter((s: any) => s.actual_check_out_date && s.actual_check_out_date < today)
 
   const invoices = allInvoices ?? []
   const unpaidInvoices = invoices.filter((i: any) => !i.is_paid)
@@ -156,12 +156,12 @@ export default async function DashboardPage() {
               <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#007AFF15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🐾</div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: 0 }}>{stay.pet_name || 'Isimsiz'}</p>
-                <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Cikis: {fmtDate(stay.checkout_date)}</p>
+                <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Cikis: {fmtDate(stay.actual_check_out_date)}</p>
               </div>
-              {stay.checkout_date && stay.checkout_date < today && (
+              {stay.actual_check_out_date && stay.actual_check_out_date < today && (
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', backgroundColor: '#FF3B3020', color: '#FF3B30', fontWeight: 600 }}>Gecikti</span>
               )}
-              {stay.checkout_date === today && (
+              {stay.actual_check_out_date === today && (
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', backgroundColor: '#FF950020', color: '#FF9500', fontWeight: 600 }}>Bugun</span>
               )}
             </div>

@@ -13,7 +13,7 @@ export default function CheckinPage() {
   const [selectedPet, setSelectedPet] = useState<any>(null)
   const [businessId, setBusinessId] = useState<string>('')
   const [form, setForm] = useState({
-    checkin_date: new Date().toISOString().split('T')[0],
+    check_in_date: new Date().toISOString().split('T')[0],
     daily_price: '',
   })
 
@@ -34,7 +34,7 @@ export default function CheckinPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('pets')
-        .select('id, name, species, breed, customers(id, name, phone)')
+        .select('id, name, species, breed, customers(id, full_name, phone)')
         .eq('business_id', businessId)
         .ilike('name', `%${search}%`)
         .limit(10)
@@ -51,7 +51,7 @@ export default function CheckinPage() {
     setSearch('')
     setSearchResults([])
     setSelectedPet(null)
-    setForm({ checkin_date: new Date().toISOString().split('T')[0], daily_price: '' })
+    setForm({ check_in_date: new Date().toISOString().split('T')[0], daily_price: '' })
   }
 
   async function handleStart() {
@@ -64,11 +64,9 @@ export default function CheckinPage() {
     const { error } = await supabase.from('stays').insert({
       business_id: businessId,
       pet_id: selectedPet.id,
-      customer_id: selectedPet.customers?.id ?? null,
-      checkin_date: form.checkin_date,
-      checkout_date: form.checkin_date,
+      check_in_date: form.check_in_date,
+      actual_check_out_date: null,
       daily_price: daily,
-      status: 'active',
     })
     if (error) { setError(error.message); setLoading(false); return }
     router.push('/dashboard/stays')
@@ -77,8 +75,8 @@ export default function CheckinPage() {
 
   const dailyPrice = parseFloat(form.daily_price.replace(',', '.')) || 0
   const formattedPrice = dailyPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })
-  const formattedDate = form.checkin_date
-    ? new Date(form.checkin_date + 'T12:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const formattedDate = form.check_in_date
+    ? new Date(form.check_in_date + 'T12:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
     : ''
 
   const cardStyle: React.CSSProperties = {
@@ -216,8 +214,8 @@ export default function CheckinPage() {
             <p style={fieldLabelStyle}>Giris Tarihi</p>
             <input
               type='date'
-              value={form.checkin_date}
-              onChange={e => setField('checkin_date', e.target.value)}
+              value={form.check_in_date}
+              onChange={e => setField('check_in_date', e.target.value)}
               style={{
                 width: '100%',
                 padding: '8px 10px',

@@ -32,7 +32,7 @@ export default function PhotoArchivePage() {
 
     const { data: petsData } = await supabase
       .from('pets')
-      .select('id, name, species, breed, owner_name, owner_phone, customers(id, full_name)')
+      .select('id, name, species, breed, owner_full_name, owner_phone, customers(id, full_name)')
       .eq('business_id', biz?.id)
       .order('name')
 
@@ -150,7 +150,7 @@ export default function PhotoArchivePage() {
     if (speciesFilter === 'other' && (sp.includes('dog') || sp.includes('kopek') || sp.includes('cat') || sp.includes('kedi'))) return false
     const q = search.toLowerCase()
     if (!q) return true
-    return pet.name.toLowerCase().includes(q) || (pet.owner_name ?? '').toLowerCase().includes(q) || (pet.customers?.full_name ?? '').toLowerCase().includes(q)
+    return pet.name.toLowerCase().includes(q) || (pet.owner_full_name ?? '').toLowerCase().includes(q) || (pet.customers?.full_name ?? '').toLowerCase().includes(q)
   })
 
   function speciesIcon(species: string) {
@@ -166,7 +166,7 @@ export default function PhotoArchivePage() {
   // Galeri görünümü
   if (selectedPet) {
     const selectedURL = selectedPhotoId ? photoURLs[selectedPhotoId] : null
-    const ownerName = selectedPet.owner_name || selectedPet.customers?.full_name || 'Sahip yok'
+    const ownerName = selectedPet.owner_full_name || selectedPet.customers?.full_name || 'Sahip yok'
 
     return (
       <div style={{ padding: '32px', maxWidth: '700px', paddingBottom: '64px' }}>
@@ -318,7 +318,7 @@ export default function PhotoArchivePage() {
       ) : filteredPets.map(pet => {
         const { icon, color } = speciesIcon(pet.species ?? '')
         const photoCount = photosByPet[pet.id]?.length ?? 0
-        const ownerName = pet.owner_name || pet.customers?.full_name || 'Sahip yok'
+        const ownerName = pet.owner_full_name || pet.customers?.full_name || 'Sahip yok'
         const thumbURL = thumbURLs[pet.id]
 
         return (

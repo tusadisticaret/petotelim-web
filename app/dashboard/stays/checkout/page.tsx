@@ -7,13 +7,13 @@ import { createClient } from '@/lib/supabase/client'
 type Stay = {
   id: string
   pet_id: string
-  checkin_date: string
-  checkout_date: string
+  check_in_date: string
+  actual_check_out_date: string
   daily_price: number
   notes: string
   status: string
   pets: { name: string; species: string; breed: string }
-  customers: { name: string; phone: string } | null
+  
 }
 
 type Filter = 'allActive' | 'todayCheckout' | 'overdue'
@@ -48,10 +48,10 @@ export default function CheckoutPage() {
       setBusinessId(biz?.id ?? '')
       const { data } = await supabase
         .from('stays')
-        .select('*, pets(name, species, breed), customers(name, phone)')
+        .select('*, pets(name, species, breed, owner_full_name, owner_phone, customers(full_name, phone))')
         .eq('business_id', biz?.id)
-        .eq('status', 'active')
-        .order('checkin_date', { ascending: true })
+        .eq('is_reservation', false).is('actual_check_out_date', null)
+        .order('check_in_date', { ascending: true })
       setStays((data as any) ?? [])
     }
     load()
@@ -62,8 +62,8 @@ export default function CheckoutPage() {
   }
 
   function calcNights(stay: Stay) {
-    const cin = new Date(stay.checkin_date)
-    const cout = new Date(stay.checkout_date)
+    const cin = new Date(stay.check_in_date)
+    const cout = new Date(stay.actual_check_out_date)
     const diff = Math.round((cout.getTime() - cin.getTime()) / (1000 * 60 * 60 * 24))
     return Math.max(1, diff === 0 ? 1 : diff)
   }
@@ -77,11 +77,11 @@ export default function CheckoutPage() {
   }
 
   function isOverdue(stay: Stay) {
-    return stay.checkout_date < today
+    return stay.actual_check_out_date < today
   }
 
   function isTodayCheckout(stay: Stay) {
-    return stay.checkout_date === today
+    return stay.actual_check_out_date === today
   }
 
   const filtered = stays.filter(s => {
@@ -116,15 +116,13 @@ export default function CheckoutPage() {
     const total = calcTotal(selected)
     const discount = calcDiscount(calcSubtotal(selected))
     const { error } = await supabase.from('stays').update({
-      status: 'completed',
-      actual_checkout_date: new Date().toISOString(),
+      actual_check_out_date: new Date().toISOString(),
       washing_fee: parsePrice(washFee),
       grooming_fee: parsePrice(groomFee),
       food_fee: parsePrice(foodFee),
       transfer_fee: parsePrice(transferFee),
       discount_tl: discount,
       total_amount: total,
-      payment_status: paymentStatus === 'Odendi' ? 'paid' : 'unpaid',
       payment_method: paymentMethod,
     }).eq('id', selected.id)
     if (error) { setError(error.message); setLoading(false); return }
@@ -199,8 +197,8 @@ export default function CheckoutPage() {
                 {isOverdue(stay) && <span style={{ fontSize: '11px', backgroundColor: '#FFF0F0', color: '#FF3B30', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Gecikti</span>}
                 {isTodayCheckout(stay) && !isOverdue(stay) && <span style={{ fontSize: '11px', backgroundColor: '#EBF5FF', color: '#007AFF', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Bugun Cikis</span>}
               </div>
-              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '3px 0 0' }}>{stay.customers?.name ?? ''} • Giris: {fmtDate(stay.checkin_date)}</p>
-              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Planlı Cikis: {fmtDate(stay.checkout_date)}</p>
+              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '3px 0 0' }}>{stay.pets?.customers?.full_name ?? stay.pets?.owner_full_name ?? ''} • Giris: {fmtDate(stay.check_in_date)}</p>
+              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Planlı Cikis: {fmtDate(stay.actual_check_out_date)}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
               {stay.daily_price > 0 && <p style={{ fontSize: '12px', color: '#6C6C70', margin: 0 }}>₺{fmtCurrency(stay.daily_price)}/gun</p>}
@@ -221,9 +219,9 @@ export default function CheckoutPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div>
               <p style={{ fontSize: '16px', fontWeight: 600, color: '#000', margin: 0 }}>{selected.pets?.name}</p>
-              <p style={{ fontSize: '13px', color: '#6C6C70', margin: '3px 0 0' }}>{selected.customers?.name ?? ''}</p>
-              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Giris: {fmtDate(selected.checkin_date)}</p>
-              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Planlı Cikis: {fmtDate(selected.checkout_date)}</p>
+              <p style={{ fontSize: '13px', color: '#6C6C70', margin: '3px 0 0' }}>{selected.pets?.customers?.full_name ?? selected.pets?.owner_full_name ?? ''}</p>
+              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Giris: {fmtDate(selected.check_in_date)}</p>
+              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Planlı Cikis: {fmtDate(selected.actual_check_out_date)}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
               <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{calcNights(selected)} gece</p>
