@@ -34,18 +34,18 @@ export default function SettingsPage() {
     setDogCapacity(biz.dog_capacity ?? 0)
     setCatCapacity(biz.cat_capacity ?? 0)
     if (biz.logo_url) {
-const { data: urlData } = await supabase.storage
-  .from('pet-media')
-  .createSignedUrl(biz.logo_url, 3600 * 24)
-setLogoUrl(urlData?.signedUrl ?? null)
-} else {
-  setLogoUrl(null)
-}
+      const { data: urlData } = await supabase.storage
+        .from('pet-media')
+        .createSignedUrl(biz.logo_url, 3600 * 24)
+      setLogoUrl(urlData?.signedUrl ?? null)
+    } else {
+      setLogoUrl(null)
+    }
     setAiActive(biz.ai_active ?? true)
     setAiPlan(biz.ai_plan ?? 'Premium')
   }
 
-  async function saveBusinessInfo() {
+  async function saveAll() {
     setSaving(true)
     const supabase = createClient()
     await supabase.from('businesses').update({
@@ -56,7 +56,7 @@ setLogoUrl(urlData?.signedUrl ?? null)
       dog_capacity: dogCapacity,
       cat_capacity: catCapacity,
     }).eq('id', businessId)
-    setAlert('İşletme bilgileri kaydedildi.')
+    setAlert('Ayarlar kaydedildi.')
     setSaving(false)
   }
 
@@ -102,15 +102,18 @@ setLogoUrl(urlData?.signedUrl ?? null)
 
   return (
     <div style={{ padding: '32px', maxWidth: '640px', paddingBottom: '64px' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-  <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0 }}>Ayarlar</h1>
-  <button
-    onClick={loadSettings}
-    style={{ padding: '8px 18px', borderRadius: '20px', backgroundColor: '#F2F2F7', color: '#007AFF', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}
-  >
-    ↻ Yenile
-  </button>
-</div>
+
+      {/* Başlık */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0 }}>Ayarlar</h1>
+        <button
+          onClick={saveAll}
+          disabled={saving}
+          style={{ padding: '8px 20px', borderRadius: '20px', backgroundColor: '#007AFF', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '15px', fontWeight: 600, opacity: saving ? 0.7 : 1 }}
+        >
+          {saving ? 'Kaydediliyor...' : 'Kaydet'}
+        </button>
+      </div>
 
       {alert && (
         <div style={{ backgroundColor: '#F0FFF4', border: '1px solid #34C75940', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -125,10 +128,7 @@ setLogoUrl(urlData?.signedUrl ?? null)
         <input value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder='İşletme Adı' style={inp} />
         <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder='Adres' rows={3} style={{ ...inp, resize: 'vertical' }} />
         <input value={phone} onChange={e => setPhone(e.target.value)} placeholder='Telefon' style={inp} />
-        <input value={taxInfo} onChange={e => setTaxInfo(e.target.value)} placeholder='Vergi Dairesi / No' style={{ ...inp, marginBottom: '16px' }} />
-        <button onClick={saveBusinessInfo} disabled={saving} style={{ padding: '10px 24px', borderRadius: '12px', border: 'none', backgroundColor: '#007AFF', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          ✓ Kaydet
-        </button>
+        <input value={taxInfo} onChange={e => setTaxInfo(e.target.value)} placeholder='Vergi Dairesi / No' style={{ ...inp, marginBottom: 0 }} />
       </div>
 
       {/* Logo */}
@@ -163,7 +163,7 @@ setLogoUrl(urlData?.signedUrl ?? null)
       {/* Kapasite */}
       <div style={card}>
         <p style={{ fontSize: '17px', fontWeight: 700, margin: '0 0 16px' }}>Kapasite</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '14px', color: '#6C6C70', margin: '0 0 8px' }}>Köpek Kapasitesi</p>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
@@ -181,9 +181,6 @@ setLogoUrl(urlData?.signedUrl ?? null)
             </div>
           </div>
         </div>
-        <button onClick={saveBusinessInfo} disabled={saving} style={{ width: '100%', padding: '10px', borderRadius: '12px', border: 'none', backgroundColor: '#007AFF', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>
-          ✓ Kapasiteyi Kaydet
-        </button>
       </div>
 
       {/* AI Asistan Ayarları */}
@@ -197,38 +194,36 @@ setLogoUrl(urlData?.signedUrl ?? null)
           <span style={{ backgroundColor: '#FFF3E0', color: '#FF9500', fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '20px' }}>Trial</span>
         </div>
 
-        {/* Erişim Durumu */}
-<div style={{ backgroundColor: '#F2F2F7', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
-  <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 4px' }}>Erişim Durumu</p>
-  <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 12px' }}>
-    {aiPlan === 'Free' ? 'Free plan aktif. Sınırlı AI özelliklerine erişim.' :
-     aiPlan === 'Premium' ? 'Premium plan aktif. AI özellikleri sınırsız açık.' :
-     aiPlan === 'Business AI' ? 'Business AI planı aktif. AI özellikleri sınırsız ve kurumsal paket görünümünde.' :
-     'Trial aktif. Kalan süre: 30 gün.'}
-  </p>
-<div style={{ display: 'flex', gap: '8px' }}>
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-    <span style={{ fontSize: '11px', color: '#6C6C70' }}>Plan</span>
-    <span style={{ backgroundColor: aiPlan === 'Free' ? '#F2F2F7' : aiPlan === 'Premium' ? '#AF52DE20' : '#007AFF20', color: aiPlan === 'Free' ? '#6C6C70' : aiPlan === 'Premium' ? '#AF52DE' : '#007AFF', fontSize: '13px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px' }}>
-      {aiPlan || 'Trial'}
-    </span>
-  </div>
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-    <span style={{ fontSize: '11px', color: '#6C6C70' }}>Trial</span>
-    <span style={{ backgroundColor: '#F2F2F7', color: '#6C6C70', fontSize: '13px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px' }}>
-      {aiPlan === 'Free' ? '30 gun' : 'Pasif'}
-    </span>
-  </div>
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-    <span style={{ fontSize: '11px', color: '#6C6C70' }}>Limit</span>
-    <span style={{ backgroundColor: '#007AFF20', color: '#007AFF', fontSize: '13px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px' }}>
-      {aiPlan === 'Free' ? '50' : 'Sinirsiz'}
-    </span>
-  </div>
-</div>
-</div>
+        <div style={{ backgroundColor: '#F2F2F7', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 4px' }}>Erişim Durumu</p>
+          <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 12px' }}>
+            {aiPlan === 'Free' ? 'Free plan aktif. Sınırlı AI özelliklerine erişim.' :
+             aiPlan === 'Premium' ? 'Premium plan aktif. AI özellikleri sınırsız açık.' :
+             aiPlan === 'Business AI' ? 'Business AI planı aktif. AI özellikleri sınırsız ve kurumsal paket görünümünde.' :
+             'Trial aktif. Kalan süre: 30 gün.'}
+          </p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#6C6C70' }}>Plan</span>
+              <span style={{ backgroundColor: aiPlan === 'Free' ? '#F2F2F7' : aiPlan === 'Premium' ? '#AF52DE20' : '#007AFF20', color: aiPlan === 'Free' ? '#6C6C70' : aiPlan === 'Premium' ? '#AF52DE' : '#007AFF', fontSize: '13px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px' }}>
+                {aiPlan || 'Trial'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#6C6C70' }}>Trial</span>
+              <span style={{ backgroundColor: '#F2F2F7', color: '#6C6C70', fontSize: '13px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px' }}>
+                {aiPlan === 'Free' ? '30 gun' : 'Pasif'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#6C6C70' }}>Limit</span>
+              <span style={{ backgroundColor: '#007AFF20', color: '#007AFF', fontSize: '13px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px' }}>
+                {aiPlan === 'Free' ? '50' : 'Sinirsiz'}
+              </span>
+            </div>
+          </div>
+        </div>
 
-        {/* Plan Yönetimi */}
         <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 10px' }}>Plan Yönetimi</p>
         <div style={{ display: 'flex', backgroundColor: '#F2F2F7', borderRadius: '12px', padding: '4px', marginBottom: '16px' }}>
           {['Free', 'Premium', 'Business AI'].map(p => (
@@ -238,7 +233,6 @@ setLogoUrl(urlData?.signedUrl ?? null)
           ))}
         </div>
 
-        {/* AI Asistan Aktif toggle */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <div>
             <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 2px' }}>AI Asistan Aktif</p>
