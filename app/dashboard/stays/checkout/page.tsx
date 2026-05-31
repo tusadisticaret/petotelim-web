@@ -28,6 +28,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const today = new Date().toISOString().split('T')[0]
+
   const [washFee, setWashFee] = useState('')
   const [groomFee, setGroomFee] = useState('')
   const [foodFee, setFoodFee] = useState('')
@@ -36,8 +38,7 @@ export default function CheckoutPage() {
   const [discountAmount, setDiscountAmount] = useState('')
   const [paymentStatus, setPaymentStatus] = useState<'Odendi' | 'Odenmedi'>('Odendi')
   const [paymentMethod, setPaymentMethod] = useState<'Nakit' | 'Kart' | 'Havale'>('Nakit')
-
-  const today = new Date().toISOString().split('T')[0]
+  const [checkoutDate, setCheckoutDate] = useState<string>(today)
 
   useEffect(() => {
     async function load() {
@@ -62,15 +63,19 @@ export default function CheckoutPage() {
   }
 
   function calcNights(stay: Stay) {
-    const cin = new Date(stay.check_in_date)
-    const cout = new Date(stay.actual_check_out_date)
+    const cin = new Date(stay.check_in_date.includes('T') ? stay.check_in_date : stay.check_in_date + 'T12:00:00')
+    const cout = new Date(checkoutDate + 'T12:00:00')
     const diff = Math.round((cout.getTime() - cin.getTime()) / (1000 * 60 * 60 * 24))
     return Math.max(1, diff === 0 ? 1 : diff)
   }
 
   function fmtDate(d: string) {
-    return new Date(d + 'T12:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  }
+  if (!d) return '—'
+  const clean = d.includes('T') ? d : d + 'T12:00:00'
+  const date = new Date(clean)
+  if (isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
   function fmtCurrency(v: number) {
     return v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -116,7 +121,7 @@ export default function CheckoutPage() {
     const total = calcTotal(selected)
     const discount = calcDiscount(calcSubtotal(selected))
     const { error } = await supabase.from('stays').update({
-      actual_check_out_date: new Date().toISOString(),
+      actual_check_out_date: new Date(checkoutDate + 'T12:00:00').toISOString(),
       washing_fee: parsePrice(washFee),
       grooming_fee: parsePrice(groomFee),
       food_fee: parsePrice(foodFee),
@@ -185,19 +190,21 @@ export default function CheckoutPage() {
         ) : filtered.map((stay, idx) => (
           <div
             key={stay.id}
-            onClick={() => { setSelected(stay); setWashFee(''); setGroomFee(''); setFoodFee(''); setTransferFee(''); setDiscountAmount(''); }}
+            onClick={() => { setSelected(stay); setCheckoutDate(today); setWashFee(''); setGroomFee(''); setFoodFee(''); setTransferFee(''); setDiscountAmount(''); }}
             style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 4px', borderBottom: idx < filtered.length - 1 ? '1px solid #E5E5EA' : 'none', cursor: 'pointer' }}
           >
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: isOverdue(stay) ? '#FF3B30' : stay.pets?.species === 'cat' ? '#FF9500' : '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
-              {stay.pets?.species === 'cat' ? '🐱' : '🐶'}
-            </div>
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: (() => { const s = (stay.pets?.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? '#FF950020' : s === 'dog' || s === 'köpek' ? '#007AFF20' : '#9B59B620' })(), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
+  {(() => { const s = (stay.pets?.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇' })()}
+</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <p style={{ fontSize: '15px', fontWeight: 600, color: '#000', margin: 0 }}>{stay.pets?.name}</p>
                 {isOverdue(stay) && <span style={{ fontSize: '11px', backgroundColor: '#FFF0F0', color: '#FF3B30', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Gecikti</span>}
                 {isTodayCheckout(stay) && !isOverdue(stay) && <span style={{ fontSize: '11px', backgroundColor: '#EBF5FF', color: '#007AFF', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Bugun Cikis</span>}
               </div>
-              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '3px 0 0' }}>{stay.pets?.customers?.full_name ?? stay.pets?.owner_full_name ?? ''} • Giris: {fmtDate(stay.check_in_date)}</p>
+              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '3px 0 0' }}>
+  {[stay.pets?.customers?.full_name ?? stay.pets?.owner_full_name, stay.pets?.breed].filter(Boolean).join(' • ')} • Giriş: {fmtDate(stay.check_in_date)}
+</p>
               <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Planlı Cikis: {fmtDate(stay.actual_check_out_date)}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -221,7 +228,6 @@ export default function CheckoutPage() {
               <p style={{ fontSize: '16px', fontWeight: 600, color: '#000', margin: 0 }}>{selected.pets?.name}</p>
               <p style={{ fontSize: '13px', color: '#6C6C70', margin: '3px 0 0' }}>{selected.pets?.customers?.full_name ?? selected.pets?.owner_full_name ?? ''}</p>
               <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Giris: {fmtDate(selected.check_in_date)}</p>
-              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>Planlı Cikis: {fmtDate(selected.actual_check_out_date)}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
               <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{calcNights(selected)} gece</p>
@@ -229,9 +235,24 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          <div style={{ height: '1px', backgroundColor: '#E5E5EA', marginBottom: '16px' }} />
+<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <span style={{ fontSize: '16px' }}>📅</span>
+    <span style={{ fontSize: '15px', color: '#6C6C70' }}>Çıkış Tarihi</span>
+  </div>
+  <input
+    type='date'
+    value={checkoutDate}
+    min={selected.check_in_date.split('T')[0]}
+    max={today}
+    onChange={e => setCheckoutDate(e.target.value)}
+    style={{ padding: '8px 14px', backgroundColor: '#F2F2F7', borderRadius: '10px', border: 'none', outline: 'none', fontSize: '15px', color: '#007AFF', fontWeight: 600, cursor: 'pointer', letterSpacing: '0.3px' }}
+  />
+</div>
 
-          {/* Ek Hizmetler */}
+<div style={{ height: '1px', backgroundColor: '#E5E5EA', marginBottom: '16px' }} />
+
+{/* Ek Hizmetler */}
           <p style={{ ...labelStyle, marginBottom: '10px' }}>Ek Hizmetler</p>
           <FeeRow label='Yikama' value={washFee} onChange={setWashFee} />
           <FeeRow label='Tiras / Grooming' value={groomFee} onChange={setGroomFee} />

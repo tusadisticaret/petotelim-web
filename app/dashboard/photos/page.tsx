@@ -145,9 +145,9 @@ export default function PhotoArchivePage() {
   const filteredPets = pets.filter(pet => {
     if (!photosByPet[pet.id] || photosByPet[pet.id].length === 0) return false
     const sp = pet.species?.toLowerCase() ?? ''
-    if (speciesFilter === 'dog' && !sp.includes('dog') && !sp.includes('kopek')) return false
+    if (speciesFilter === 'dog' && !sp.includes('dog') && !sp.includes('köpek')) return false
     if (speciesFilter === 'cat' && !sp.includes('cat') && !sp.includes('kedi')) return false
-    if (speciesFilter === 'other' && (sp.includes('dog') || sp.includes('kopek') || sp.includes('cat') || sp.includes('kedi'))) return false
+    if (speciesFilter === 'other' && (sp.includes('dog') || sp.includes('köpek') || sp.includes('cat') || sp.includes('kedi'))) return false
     const q = search.toLowerCase()
     if (!q) return true
     return pet.name.toLowerCase().includes(q) || (pet.owner_full_name ?? '').toLowerCase().includes(q) || (pet.customers?.full_name ?? '').toLowerCase().includes(q)
@@ -155,9 +155,9 @@ export default function PhotoArchivePage() {
 
   function speciesIcon(species: string) {
     const sp = (species ?? '').toLowerCase()
-    if (sp.includes('dog') || sp.includes('kopek')) return { icon: '🐶', color: '#007AFF' }
-    if (sp.includes('cat') || sp.includes('kedi')) return { icon: '🐱', color: '#FF9500' }
-    return { icon: '🐾', color: '#6C6C70' }
+    if (sp.includes('dog') || sp.includes('köpek')) return { icon: '🐕', color: '#007AFF' }
+    if (sp.includes('cat') || sp.includes('kedi')) return { icon: '🐈', color: '#FF9500' }
+    return { icon: '🐇', color: '#9B59B6' }
   }
 
   const card: React.CSSProperties = { backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '12px', padding: '14px' }
@@ -295,7 +295,7 @@ export default function PhotoArchivePage() {
           { key: 'all', label: 'Tümü', icon: '🐾', color: '#6C6C70' },
           { key: 'dog', label: 'Köpek', icon: '🐶', color: '#007AFF' },
           { key: 'cat', label: 'Kedi', icon: '🐱', color: '#FF9500' },
-          { key: 'other', label: 'Diğer', icon: '🦜', color: '#34C759' },
+          { key: 'other', label: 'Diğer', icon: '🐇', color: '#9B59B6' },
         ].map(f => (
           <button key={f.key} onClick={() => setSpeciesFilter(f.key as any)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '20px', border: speciesFilter === f.key ? `1.5px solid ${f.color}` : '1.5px solid transparent', cursor: 'pointer', fontSize: '13px', fontWeight: 500, backgroundColor: speciesFilter === f.key ? f.color + '20' : '#F2F2F7', color: speciesFilter === f.key ? f.color : '#000' }}>
             <span>{f.icon}</span>{f.label}
@@ -333,7 +333,9 @@ export default function PhotoArchivePage() {
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: '16px', fontWeight: 600, color: '#000', margin: '0 0 3px' }}>{pet.name}</p>
               <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 3px' }}>{ownerName}</p>
-              <p style={{ fontSize: '12px', color: '#AEAEB2', margin: 0 }}>{pet.species ?? 'Diğer'} • {photoCount} fotoğraf</p>
+              <p style={{ fontSize: '12px', color: '#AEAEB2', margin: 0 }}>
+  {(() => { const s = (pet.species ?? '').toLowerCase(); return s === 'dog' || s === 'köpek' ? 'Köpek' : s === 'cat' || s === 'kedi' ? 'Kedi' : 'Diğer' })()} • {photoCount} fotoğraf
+</p>
             </div>
             <span style={{ color: '#C7C7CC', fontSize: '18px' }}>›</span>
           </div>

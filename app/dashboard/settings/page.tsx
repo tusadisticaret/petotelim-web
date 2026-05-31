@@ -33,7 +33,16 @@ export default function SettingsPage() {
     setTaxInfo(biz.tax_info ?? '')
     setDogCapacity(biz.dog_capacity ?? 0)
     setCatCapacity(biz.cat_capacity ?? 0)
-    setLogoUrl(biz.logo_url ?? null)
+    if (biz.logo_url) {
+const { data: urlData, error: urlErr } = await supabase.storage
+  .from('pet-media')
+  .createSignedUrl(biz.logo_url, 3600 * 24)
+console.log('Logo URL:', urlData?.signedUrl)
+console.log('Logo Error:', urlErr)
+setLogoUrl(urlData?.signedUrl ?? null)
+} else {
+  setLogoUrl(null)
+}
     setAiActive(biz.ai_active ?? true)
     setAiPlan(biz.ai_plan ?? 'Premium')
   }
@@ -95,7 +104,15 @@ export default function SettingsPage() {
 
   return (
     <div style={{ padding: '32px', maxWidth: '640px', paddingBottom: '64px' }}>
-      <h1 style={{ fontSize: '32px', fontWeight: 800, margin: '0 0 24px' }}>Ayarlar</h1>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+  <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0 }}>Ayarlar</h1>
+  <button
+    onClick={loadSettings}
+    style={{ padding: '8px 18px', borderRadius: '20px', backgroundColor: '#F2F2F7', color: '#007AFF', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}
+  >
+    ↻ Yenile
+  </button>
+</div>
 
       {alert && (
         <div style={{ backgroundColor: '#F0FFF4', border: '1px solid #34C75940', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

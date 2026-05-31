@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function WashEntryPage() {
+export default function TrimEntryPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -14,7 +14,7 @@ export default function WashEntryPage() {
   const [businessId, setBusinessId] = useState('')
   const [form, setForm] = useState({
     species: 0, size: 0, serviceLevel: 0,
-    date: new Date().toISOString().split('T')[0],
+    date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })(),
     fee: '', notes: '',
   })
 
@@ -93,13 +93,7 @@ export default function WashEntryPage() {
 
   return (
     <div style={{ padding: '32px', maxWidth: '600px', paddingBottom: '64px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', fontSize: '16px', color: '#007AFF', cursor: 'pointer', fontWeight: 500 }}>Iptal</button>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#000', margin: 0, flex: 1, textAlign: 'center' }}>Tiras Girisi</h1>
-        <button onClick={handleSave} disabled={loading} style={{ background: 'none', border: 'none', fontSize: '16px', color: loading ? '#C7C7CC' : '#007AFF', cursor: 'pointer', fontWeight: 600 }}>
-          {loading ? 'Kaydediliyor...' : 'Kaydet'}
-        </button>
-      </div>
+      <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#000', margin: '0 0 24px' }}>Tıraş Girişi</h1>
 
       {/* Kayittan Getir */}
       <div style={cardStyle}>
@@ -111,8 +105,16 @@ export default function WashEntryPage() {
         {searchResults.length > 0 && !selectedPet && (
           <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E5EA', marginBottom: '8px' }}>
             {searchResults.map((pet, idx) => (
-              <div key={pet.id} onClick={() => { setSelectedPet(pet); setSearch(pet.name); setSearchResults([]); setField('species', pet.species === 'cat' ? 1 : pet.species === 'dog' ? 0 : 2) }} style={{ padding: '10px 16px', borderBottom: idx < searchResults.length - 1 ? '1px solid #E5E5EA' : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '18px' }}>{pet.species === 'cat' ? '🐱' : '🐶'}</span>
+              <div key={pet.id} onClick={() => {
+                setSelectedPet(pet)
+                setSearch(pet.name)
+                setSearchResults([])
+                const s = (pet.species ?? '').toLowerCase()
+                setField('species', s === 'cat' || s === 'kedi' ? 1 : s === 'dog' || s === 'köpek' || s === 'kopek' ? 0 : 2)
+              }} style={{ padding: '10px 16px', borderBottom: idx < searchResults.length - 1 ? '1px solid #E5E5EA' : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '18px' }}>
+                  {(() => { const s = (pet.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇' })()}
+                </span>
                 <div>
                   <p style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: 0 }}>{pet.name}</p>
                   <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{pet.customers?.full_name ?? ''}</p>
@@ -129,15 +131,20 @@ export default function WashEntryPage() {
         <div style={cardStyle}>
           <p style={sectionTitle}>Secilen Evcil Hayvan</p>
           <div style={{ backgroundColor: '#EBF5FF', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-            <span style={{ fontSize: '24px' }}>{selectedPet.species === 'cat' ? '🐱' : '🐶'}</span>
+            {(() => {
+              const s = (selectedPet.species ?? '').toLowerCase()
+              const icon = s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇'
+              const color = s === 'cat' || s === 'kedi' ? '#FF9500' : s === 'dog' || s === 'köpek' ? '#007AFF' : '#9B59B6'
+              return <span style={{ fontSize: '24px', color }}>{icon}</span>
+            })()}
             <div>
               <p style={{ fontSize: '15px', fontWeight: 600, color: '#007AFF', margin: 0 }}>{selectedPet.name}</p>
-              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{selectedPet.customers?.full_name ?? ''} {selectedPet.breed ? '• ' + selectedPet.breed : ''}</p>
+              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{selectedPet.customers?.full_name ?? ''}{selectedPet.breed ? ' • ' + selectedPet.breed : ''}</p>
             </div>
           </div>
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: '#6C6C70', marginBottom: '4px' }}>Notlar</label>
-            <textarea value={form.notes} onChange={e => setField('notes', e.target.value)} placeholder='Not ekleyin' rows={3} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#F2F2F7', borderRadius: '10px', border: 'none', outline: 'none', fontSize: '14px', resize: 'none' }} />
+            <textarea value={form.notes} onChange={e => setField('notes', e.target.value)} placeholder='Not ekleyin' rows={3} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#F2F2F7', borderRadius: '10px', border: 'none', outline: 'none', fontSize: '14px', resize: 'none', boxSizing: 'border-box' }} />
           </div>
         </div>
       )}
@@ -165,7 +172,15 @@ export default function WashEntryPage() {
         </div>
       </div>
 
-      {error && <div style={{ backgroundColor: '#FFF0F0', color: '#FF3B30', fontSize: '13px', padding: '12px 16px', borderRadius: '12px' }}>{error}</div>}
+      {error && <div style={{ backgroundColor: '#FFF0F0', color: '#FF3B30', fontSize: '13px', padding: '12px 16px', borderRadius: '12px', marginBottom: '12px' }}>{error}</div>}
+
+      <button
+        onClick={handleSave}
+        disabled={loading}
+        style={{ width: '100%', padding: '16px', backgroundColor: '#007AFF', color: '#fff', borderRadius: '14px', border: 'none', cursor: 'pointer', fontSize: '17px', fontWeight: 700, opacity: loading ? 0.6 : 1, marginTop: '8px' }}
+      >
+        ✓ {loading ? 'Kaydediliyor...' : 'Tıraşı Kaydet'}
+      </button>
     </div>
   )
 }

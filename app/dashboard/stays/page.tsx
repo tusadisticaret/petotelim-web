@@ -31,15 +31,16 @@ export default function LongStayPage() {
   useEffect(() => { loadAll() }, [])
 
   useEffect(() => {
-    if (!search.trim()) { setFilteredPets([]); return }
-    const q = search.toLowerCase()
-    setFilteredPets(pets.filter(p =>
-      p.name?.toLowerCase().includes(q) ||
-      (p.owner_full_name ?? p.customers?.full_name ?? '').toLowerCase().includes(q) ||
-      (p.owner_phone ?? '').toLowerCase().includes(q) ||
-      (p.breed ?? '').toLowerCase().includes(q)
-    ).slice(0, 8))
-  }, [search, pets])
+  if (!search.trim() || selectedPet) { setFilteredPets([]); return }
+  const q = search.toLowerCase()
+  setFilteredPets(pets.filter(p =>
+    p.name?.toLowerCase().includes(q) ||
+    (p.owner_full_name ?? p.customers?.full_name ?? '').toLowerCase().includes(q) ||
+    (p.owner_phone ?? p.customers?.phone ?? '').toLowerCase().includes(q) ||
+    (p.owner_tckn ?? '').toLowerCase().includes(q) ||
+    (p.breed ?? '').toLowerCase().includes(q)
+  ).slice(0, 8))
+}, [search, pets, selectedPet?.id])
 
   async function loadAll(from = dateFrom, to = dateTo) {
     setLoading(true)
@@ -164,12 +165,23 @@ export default function LongStayPage() {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Hayvan adı / sahip adı / telefon' style={inp} />
             {filteredPets.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 10, marginTop: '4px', overflow: 'hidden' }}>
-                {filteredPets.map((pet, i) => (
-                  <div key={pet.id} onClick={() => selectPet(pet)} style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: i < filteredPets.length - 1 ? '1px solid #F2F2F7' : 'none', backgroundColor: selectedPet?.id === pet.id ? '#F0F7FF' : '#fff' }}>
-                    <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 2px' }}>{pet.name}</p>
-                    <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{pet.customers?.full_name ?? pet.owner_full_name ?? ''} • {pet.species ?? ''} {pet.breed ? `• ${pet.breed}` : ''}</p>
-                  </div>
-                ))}
+                {filteredPets.map((pet, i) => {
+  const s = (pet.species ?? '').toLowerCase()
+  const emoji = s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇'
+  const speciesLabel = s === 'cat' || s === 'kedi' ? 'Kedi' : s === 'dog' || s === 'köpek' ? 'Köpek' : 'Diğer'
+  return (
+    <div key={pet.id} onClick={() => selectPet(pet)}
+      style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: i < filteredPets.length - 1 ? '1px solid #F2F2F7' : 'none', backgroundColor: selectedPet?.id === pet.id ? '#F0F7FF' : '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <span style={{ fontSize: '20px' }}>{emoji}</span>
+      <div>
+        <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 2px' }}>{pet.name}</p>
+        <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>
+          {[pet.customers?.full_name ?? pet.owner_full_name, speciesLabel, pet.breed].filter(Boolean).join(' • ')}
+        </p>
+      </div>
+    </div>
+  )
+})}
               </div>
             )}
           </div>
@@ -182,10 +194,18 @@ export default function LongStayPage() {
         <p style={{ fontSize: '17px', fontWeight: 700, margin: '0 0 16px' }}>Yeni Uzun Süreli Konaklama Girişi</p>
 
         {selectedPet ? (
-          <div style={{ padding: '12px', backgroundColor: '#F0F7FF', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px' }}>{selectedPet.name}</p>
-            <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{selectedPet.customers?.full_name ?? selectedPet.owner_full_name ?? 'Sahip yok'} • {selectedPet.species ?? ''}</p>
-          </div>
+  <div style={{ padding: '12px 16px', backgroundColor: '#fff', borderRadius: '12px', marginBottom: '16px', border: '1px solid #E5E5EA', display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <span style={{ fontSize: '24px' }}>
+      {(() => { const s = (selectedPet.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇' })()}
+    </span>
+    <div style={{ flex: 1 }}>
+      <p style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 2px' }}>{selectedPet.name}</p>
+      <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>
+        {[selectedPet.customers?.full_name ?? selectedPet.owner_full_name, (() => { const s = (selectedPet.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? 'Kedi' : s === 'dog' || s === 'köpek' ? 'Köpek' : 'Diğer' })(), selectedPet.breed].filter(Boolean).join(' • ')}
+      </p>
+    </div>
+    <span style={{ color: '#C7C7CC', fontSize: '16px' }}>›</span>
+  </div>
         ) : (
           <p style={{ color: '#6C6C70', fontSize: '14px', marginBottom: '16px' }}>Önce bir evcil hayvan seç.</p>
         )}
@@ -240,7 +260,9 @@ export default function LongStayPage() {
                       if (pet) selectPet(pet)
                     }} style={{ padding: '14px', borderRadius: '14px', backgroundColor: '#EBF4FF', border: `1px solid ${isSelected ? '#007AFF' : '#007AFF33'}`, cursor: 'pointer' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '15px', fontWeight: 700 }}>🐾 {plan.pets?.name ?? 'İsimsiz'}</span>
+                        <span style={{ fontSize: '15px', fontWeight: 700 }}>
+  {(() => { const s = (plan.pets?.species ?? '').toLowerCase(); return s === 'dog' || s === 'köpek' ? '🐕' : s === 'cat' || s === 'kedi' ? '🐈' : '🐇' })()} {plan.pets?.name ?? 'İsimsiz'}
+</span>
                         <span style={{ fontSize: '14px', fontWeight: 600, color: '#007AFF' }}>{fmtMoney(plan.price_monthly)}</span>
                       </div>
                       <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 8px' }}>{ownerLine}</p>
@@ -339,7 +361,12 @@ export default function LongStayPage() {
 }
 
 // Helpers
-function today() { return new Date().toISOString().split('T')[0] }
+function today() { return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0] }
+function tomorrow() {
+  const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+}
 function daysAgo(n: number) {
   const d = new Date(); d.setDate(d.getDate() - n)
   return d.toISOString().split('T')[0]

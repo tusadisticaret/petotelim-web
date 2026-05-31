@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const WEEKDAYS = [
@@ -14,8 +13,95 @@ const WEEKDAYS = [
   { label: 'Pazar', short: 'Paz', value: 6 },
 ]
 
+function makeDate(year: number, month: number, anchorDay: number): Date {
+  const lastDay = new Date(year, month, 0).getDate()
+  const day = Math.min(Math.max(anchorDay, 1), lastDay)
+  return new Date(year, month - 1, day, 12, 0, 0)
+}
+
+function addOneMonthSameRule(date: Date, anchorDay: number): Date {
+  let year = date.getFullYear()
+  let month = date.getMonth() + 1
+  month += 1
+  if (month === 13) { month = 1; year += 1 }
+  return makeDate(year, month, anchorDay)
+}
+
+function periodEnd(start: Date, anchorDay: number): Date {
+  const next = addOneMonthSameRule(start, anchorDay)
+  const end = new Date(next)
+  end.setDate(end.getDate() - 1)
+  return end
+}
+
+function toDateStr(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+async function ensurePeriods(supabase: any, packages: any[], allPeriods: any[], bizId: string) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  for (const pkg of packages) {
+    if (!pkg.is_active) continue
+    const startDate = new Date(pkg.start_date + 'T12:00:00')
+    const anchorDay = pkg.anchor_day > 0 ? pkg.anchor_day : startDate.getDate()
+
+    const startDay = startDate.getDate()
+    let normalizedFirstStart: Date
+    if (startDay === anchorDay) {
+      normalizedFirstStart = new Date(startDate)
+    } else {
+      const normalized = makeDate(startDate.getFullYear(), startDate.getMonth() + 1, anchorDay)
+      normalized.setHours(0, 0, 0, 0)
+      const startMidnight = new Date(startDate)
+      startMidnight.setHours(0, 0, 0, 0)
+      if (normalized <= startMidnight) {
+        normalizedFirstStart = addOneMonthSameRule(normalized, anchorDay)
+      } else {
+        normalizedFirstStart = normalized
+      }
+    }
+
+    const packagePeriods = allPeriods.filter((p: any) => p.package_id === pkg.id)
+    let cursor = new Date(normalizedFirstStart)
+    cursor.setHours(0, 0, 0, 0)
+
+    while (cursor <= today) {
+      const cursorStr = toDateStr(cursor)
+      const cursorMonth = cursor.getMonth()
+      const cursorYear = cursor.getFullYear()
+
+      const exists = packagePeriods.some((p: any) => p.period_start === cursorStr)
+      const petHasPeriodThisMonth = allPeriods.some((p: any) => {
+        if (p.pet_id !== pkg.pet_id) return false
+        const pStart = new Date(p.period_start + 'T12:00:00')
+        return pStart.getMonth() === cursorMonth && pStart.getFullYear() === cursorYear
+      })
+
+      if (!exists && !petHasPeriodThisMonth) {
+        const end = periodEnd(cursor, anchorDay)
+        await supabase.from('daycare_periods').insert({
+          business_id: bizId,
+          package_id: pkg.id,
+          pet_id: pkg.pet_id,
+          period_start: cursorStr,
+          period_end: toDateStr(end),
+          fee_snapshot: pkg.price,
+          discount_tl: 0,
+        })
+      }
+
+      cursor = addOneMonthSameRule(cursor, anchorDay)
+      cursor.setHours(0, 0, 0, 0)
+    }
+  }
+}
+
 export default function DaycareNewPage() {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -25,7 +111,9 @@ export default function DaycareNewPage() {
   const [businessId, setBusinessId] = useState('')
   const [existingPackage, setExistingPackage] = useState<any>(null)
   const [showPlans, setShowPlans] = useState(false)
+  const [showPeriods, setShowPeriods] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
+  const [periods, setPeriods] = useState<any[]>([])
   const [showWeekdayPicker, setShowWeekdayPicker] = useState(false)
   const [form, setForm] = useState({
     startDate: new Date().toISOString().split('T')[0],
@@ -39,7 +127,11 @@ export default function DaycareNewPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      let user
+      try {
+        const { data } = await supabase.auth.getUser()
+        user = data.user
+      } catch { return }
       if (!user) return
       const { data: biz } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
       setBusinessId(biz?.id ?? '')
@@ -67,6 +159,7 @@ export default function DaycareNewPage() {
     setSearch(pet.name)
     setSearchResults([])
     const supabase = createClient()
+
     const { data: pkgs } = await supabase
       .from('daycare_packages')
       .select('*')
@@ -86,6 +179,25 @@ export default function DaycareNewPage() {
         notes: active.notes ?? '',
       })
     }
+
+    const { data: allPkgs } = await supabase
+      .from('daycare_packages')
+      .select('*')
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+    const { data: allPeriods } = await supabase
+      .from('daycare_periods')
+      .select('*')
+      .eq('business_id', businessId)
+    await ensurePeriods(supabase, allPkgs ?? [], allPeriods ?? [], businessId)
+
+    const { data: periodData } = await supabase
+      .from('daycare_periods')
+      .select('*')
+      .eq('pet_id', pet.id)
+      .eq('business_id', businessId)
+      .order('period_start', { ascending: false })
+    setPeriods(periodData ?? [])
   }
 
   function toggleWeekday(val: number) {
@@ -135,9 +247,29 @@ export default function DaycareNewPage() {
       setSuccess('Kres plani kaydedildi.')
     }
     setLoading(false)
-    const { data: pkgs } = await supabase.from('daycare_packages').select('*').eq('business_id', businessId).eq('pet_id', selectedPet.id).order('start_date', { ascending: false })
+
+    const { data: pkgs } = await supabase
+      .from('daycare_packages')
+      .select('*')
+      .eq('business_id', businessId)
+      .eq('pet_id', selectedPet.id)
+      .order('start_date', { ascending: false })
     setPlans(pkgs ?? [])
     setExistingPackage(pkgs?.find((p: any) => p.is_active) ?? null)
+
+    const { data: allPeriods } = await supabase
+      .from('daycare_periods')
+      .select('*')
+      .eq('business_id', businessId)
+    await ensurePeriods(supabase, pkgs ?? [], allPeriods ?? [], businessId)
+
+    const { data: periodData } = await supabase
+      .from('daycare_periods')
+      .select('*')
+      .eq('pet_id', selectedPet.id)
+      .eq('business_id', businessId)
+      .order('period_start', { ascending: false })
+    setPeriods(periodData ?? [])
   }
 
   async function handleStop() {
@@ -146,7 +278,12 @@ export default function DaycareNewPage() {
     await supabase.from('daycare_packages').update({ is_active: false }).eq('id', existingPackage.id)
     setExistingPackage(null)
     setSuccess('Plan durduruldu.')
-    const { data: pkgs } = await supabase.from('daycare_packages').select('*').eq('business_id', businessId).eq('pet_id', selectedPet.id).order('start_date', { ascending: false })
+    const { data: pkgs } = await supabase
+      .from('daycare_packages')
+      .select('*')
+      .eq('business_id', businessId)
+      .eq('pet_id', selectedPet.id)
+      .order('start_date', { ascending: false })
     setPlans(pkgs ?? [])
   }
 
@@ -194,7 +331,9 @@ export default function DaycareNewPage() {
           <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E5EA', marginTop: '8px' }}>
             {searchResults.map((pet, idx) => (
               <div key={pet.id} onClick={() => selectPet(pet)} style={{ padding: '10px 16px', borderBottom: idx < searchResults.length - 1 ? '1px solid #E5E5EA' : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '18px' }}>{pet.species === 'cat' ? '🐱' : '🐶'}</span>
+                <span style={{ fontSize: '18px' }}>
+                  {(() => { const s = (pet.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇' })()}
+                </span>
                 <div>
                   <p style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: 0 }}>{pet.name}</p>
                   <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{pet.breed ?? ''}</p>
@@ -209,70 +348,67 @@ export default function DaycareNewPage() {
       {/* Kres Plani */}
       <div style={cardStyle}>
         <p style={sectionTitle}>{existingPackage ? 'Kres Plani' : 'Yeni Kres Plani'}</p>
-        {!selectedPet ? (
-          <div style={{ padding: '40px', textAlign: 'center' }}>
-            <p style={{ fontSize: '48px', margin: '0 0 12px' }}>🐾</p>
-            <p style={{ fontSize: '16px', color: '#6C6C70', margin: 0 }}>Once bir evcil hayvan sec</p>
-          </div>
-        ) : (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '4px 0', marginBottom: '16px' }}>
-              <span style={{ fontSize: '24px' }}>{selectedPet.species === 'cat' ? '🐱' : '🐶'}</span>
-              <div>
-                <p style={{ fontSize: '16px', fontWeight: 600, color: '#000', margin: 0 }}>{selectedPet.name}</p>
-                <p style={{ fontSize: '13px', color: '#6C6C70', margin: '2px 0 0' }}>{selectedPet.breed ?? ''}</p>
-              </div>
-              <span style={{ color: '#C7C7CC', marginLeft: 'auto', fontSize: '16px' }}>›</span>
-            </div>
 
-            {/* Ana Konum */}
-            <div style={{ marginBottom: '14px' }}>
-              <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 8px' }}>Ana Konum (Ev)</p>
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: '#F2F2F7', color: '#007AFF', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}>
-                  📍 Haritadan Sec
-                </button>
-                <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: '#F2F2F7', color: '#6C6C70', fontSize: '14px', fontWeight: 500, cursor: 'not-allowed' }}>
-                  🗺️ Haritada Goster
-                </button>
-              </div>
-              <input value={form.mainAddress} onChange={e => setForm(p => ({ ...p, mainAddress: e.target.value }))} placeholder='Adres' style={inputStyle} />
-              <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: '#F2F2F7', color: '#6C6C70', fontSize: '14px', fontWeight: 500, cursor: 'pointer', marginTop: '8px' }}>
-                ↗️ Paylas
-              </button>
-            </div>
-
-            {/* Alt Konum */}
-            <div style={{ marginBottom: '14px' }}>
-              <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 8px' }}>Alternatif Konum (Is yeri)</p>
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: '#F2F2F7', color: '#007AFF', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}>
-                  📍 Haritadan Sec
-                </button>
-                <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: '#F2F2F7', color: '#6C6C70', fontSize: '14px', fontWeight: 500, cursor: 'not-allowed' }}>
-                  🗺️ Haritada Goster
-                </button>
-              </div>
-              <input value={form.altAddress} onChange={e => setForm(p => ({ ...p, altAddress: e.target.value }))} placeholder='Adres' style={inputStyle} />
-              <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: '#F2F2F7', color: '#6C6C70', fontSize: '14px', fontWeight: 500, cursor: 'pointer', marginTop: '8px' }}>
-                ↗️ Paylas
-              </button>
-            </div>
-
-            {/* Notlar */}
+        {selectedPet && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '4px 0', marginBottom: '16px' }}>
+            <span style={{ fontSize: '24px' }}>
+              {(() => { const s = (selectedPet.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇' })()}
+            </span>
             <div>
-              <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 6px' }}>Notlar</p>
-              <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder='Plan notlari' rows={4} style={{ ...inputStyle, resize: 'none' }} />
+              <p style={{ fontSize: '16px', fontWeight: 600, color: '#000', margin: 0 }}>{selectedPet.name}</p>
+              <p style={{ fontSize: '13px', color: '#6C6C70', margin: '2px 0 0' }}>{selectedPet.breed ?? ''}</p>
             </div>
-          </>
+            <span style={{ color: '#C7C7CC', marginLeft: 'auto', fontSize: '16px' }}>›</span>
+          </div>
         )}
+
+        {/* Ana Konum */}
+        <div style={{ marginBottom: '14px' }}>
+          <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 8px' }}>Ana Konum (Ev)</p>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <button
+              onClick={() => { if (form.mainAddress.trim()) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.mainAddress)}`, '_blank') }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: form.mainAddress.trim() ? '#EBF5FF' : '#F2F2F7', color: form.mainAddress.trim() ? '#007AFF' : '#6C6C70', fontSize: '14px', fontWeight: 500, cursor: form.mainAddress.trim() ? 'pointer' : 'not-allowed' }}>
+              🗺️ Haritada Göster
+            </button>
+          </div>
+          <input value={form.mainAddress} onChange={e => setForm(p => ({ ...p, mainAddress: e.target.value }))} placeholder='Adres' style={inputStyle} />
+          <button
+            onClick={() => { if (form.mainAddress.trim()) navigator.clipboard.writeText(form.mainAddress) }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: '#F2F2F7', color: form.mainAddress.trim() ? '#007AFF' : '#6C6C70', fontSize: '14px', fontWeight: 500, cursor: form.mainAddress.trim() ? 'pointer' : 'not-allowed', marginTop: '8px' }}>
+            📋 Kopyala
+          </button>
+        </div>
+
+        {/* Alt Konum */}
+        <div style={{ marginBottom: '14px' }}>
+          <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 8px' }}>Alternatif Konum (İş yeri)</p>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <button
+              onClick={() => { if (form.altAddress.trim()) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.altAddress)}`, '_blank') }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: form.altAddress.trim() ? '#EBF5FF' : '#F2F2F7', color: form.altAddress.trim() ? '#007AFF' : '#6C6C70', fontSize: '14px', fontWeight: 500, cursor: form.altAddress.trim() ? 'pointer' : 'not-allowed' }}>
+              🗺️ Haritada Göster
+            </button>
+          </div>
+          <input value={form.altAddress} onChange={e => setForm(p => ({ ...p, altAddress: e.target.value }))} placeholder='Adres' style={inputStyle} />
+          <button
+            onClick={() => { if (form.altAddress.trim()) navigator.clipboard.writeText(form.altAddress) }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: '#F2F2F7', color: form.altAddress.trim() ? '#007AFF' : '#6C6C70', fontSize: '14px', fontWeight: 500, cursor: form.altAddress.trim() ? 'pointer' : 'not-allowed', marginTop: '8px' }}>
+            📋 Kopyala
+          </button>
+        </div>
+
+        {/* Notlar */}
+        <div>
+          <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 6px' }}>Notlar</p>
+          <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder='Plan notları' rows={4} style={{ ...inputStyle, resize: 'none' }} />
+        </div>
       </div>
 
       {/* Kres Baslat */}
       <div style={cardStyle}>
         <p style={sectionTitle}>Kres Baslat</p>
 
-        {/* 3 kolon: Baslangic Tarihi | Haftanin Gunleri | Aylik Ucret */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '14px', color: '#6C6C70', margin: '0 0 8px', textAlign: 'center' }}>Baslangic Tarihi</p>
@@ -386,6 +522,50 @@ export default function DaycareNewPage() {
           </div>
         )}
       </div>
+
+      {/* Kres Donemler */}
+      {periods.length > 0 && (
+        <div style={{ backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
+          <button onClick={() => setShowPeriods(p => !p)} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <p style={{ fontSize: '17px', fontWeight: 700, color: '#000', margin: 0 }}>Kreş Dönemleri</p>
+              <span style={{ fontSize: '12px', fontWeight: 600, padding: '2px 8px', borderRadius: '20px', backgroundColor: '#007AFF20', color: '#007AFF' }}>{periods.length}</span>
+            </div>
+            <span style={{ fontSize: '14px', color: '#6C6C70' }}>{showPeriods ? '▲' : '▼'}</span>
+          </button>
+
+          {showPeriods && (
+            <div style={{ padding: '0 20px 16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {periods.map(period => {
+                  const isPaid = !!period.invoiced_at
+                  const total = (period.fee_snapshot ?? 0) - (period.discount_tl ?? 0)
+                  return (
+                    <div key={period.id} style={{ backgroundColor: '#F9F9FB', borderRadius: '12px', padding: '12px 14px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <p style={{ fontSize: '15px', fontWeight: 700, color: '#000', margin: '0 0 4px' }}>Kreş Dönemi</p>
+                          <p style={{ fontSize: '13px', color: '#6C6C70', margin: '0 0 6px' }}>
+                            {fmtDate(period.period_start)} → {fmtDate(period.period_end)}
+                          </p>
+                          <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', backgroundColor: isPaid ? '#E8F5E9' : '#F2F2F7', color: isPaid ? '#34C759' : '#6C6C70' }}>
+                            {isPaid ? 'Ödendi' : 'Fatura yok'}
+                          </span>
+                          {period.discount_tl > 0 && (
+                            <p style={{ fontSize: '12px', color: '#FF3B30', margin: '4px 0 0' }}>İndirim: -₺{fmtCurrency(period.discount_tl)}</p>
+                          )}
+                        </div>
+                        <p style={{ fontSize: '16px', fontWeight: 700, color: '#007AFF', margin: 0 }}>₺{fmtCurrency(total)}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
     </div>
   )
 }

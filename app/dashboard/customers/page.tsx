@@ -28,8 +28,7 @@ export default function CustomersPage() {
       .order('full_name')
 
     setCustomers(data ?? [])
-    // Hepsini açık başlat
-    setExpandedIds(new Set((data ?? []).map((c: any) => c.id)))
+    setExpandedIds(new Set())
     setLoading(false)
   }
 
@@ -42,11 +41,11 @@ export default function CustomersPage() {
     })
   }
 
-  function speciesIcon(species: string) {
+  function speciesInfo(species: string) {
     const sp = (species ?? '').toLowerCase()
-    if (sp.includes('dog') || sp.includes('kopek') || sp.includes('köpek')) return { icon: '🐶', color: '#007AFF' }
-    if (sp.includes('cat') || sp.includes('kedi')) return { icon: '🐱', color: '#FF9500' }
-    return { icon: '🐾', color: '#6C6C70' }
+    if (sp.includes('dog') || sp.includes('kopek') || sp.includes('köpek')) return { emoji: '🐕', bgColor: '#EBF4FF', label: 'Köpek' }
+    if (sp.includes('cat') || sp.includes('kedi')) return { emoji: '🐈', bgColor: '#FFF3E0', label: 'Kedi' }
+    return { emoji: '🐇', bgColor: '#F3EFFF', label: species ?? 'Diğer' }
   }
 
   function calcAge(birthDate: string) {
@@ -60,6 +59,14 @@ export default function CustomersPage() {
     return `${years} yaş`
   }
 
+  function genderLabel(gender: string) {
+    if (!gender) return ''
+    const g = gender.toLowerCase()
+    if (g === 'male' || g === 'erkek') return 'Erkek'
+    if (g === 'female' || g === 'dişi' || g === 'disi') return 'Dişi'
+    return gender
+  }
+
   const filtered = customers.filter(c => {
     if (!search.trim()) return true
     const q = search.toLowerCase()
@@ -69,92 +76,143 @@ export default function CustomersPage() {
       c.pets?.some((p: any) => p.name?.toLowerCase().includes(q))
   })
 
-  const card: React.CSSProperties = { backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px', padding: '16px 20px' }
-  const inp: React.CSSProperties = { width: '100%', padding: '10px 14px', backgroundColor: '#F2F2F7', borderRadius: '10px', border: 'none', outline: 'none', fontSize: '15px', boxSizing: 'border-box', color: '#000' }
-
   return (
     <div style={{ padding: '32px', maxWidth: '720px', paddingBottom: '64px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0 }}>Müşteriler</h1>
-        <button onClick={() => router.push('/dashboard/pets/new')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: '#007AFF', color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>
-          + Yeni Müşteri
-        </button>
-      </div>
+      <h1 style={{ fontSize: '34px', fontWeight: 800, margin: '0 0 24px', color: '#000' }}>Müşteriler</h1>
 
-      {/* Arama */}
-      <div style={{ ...card, padding: '16px' }}>
-        <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 10px' }}>Ara</p>
+      {/* Arama Kutusu */}
+      <div style={{ backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: '16px', marginBottom: '16px' }}>
+        <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 10px', color: '#000' }}>Ara</p>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Hayvan adı / sahip adı / telefon' style={inp} />
-          <button onClick={() => setSearch('')} style={{ padding: '10px 16px', borderRadius: '10px', border: 'none', backgroundColor: '#F2F2F7', fontSize: '14px', cursor: 'pointer' }}>Temizle</button>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Hayvan adı / sahip adı / telefon"
+            style={{
+              flex: 1, padding: '10px 14px', backgroundColor: '#F2F2F7',
+              borderRadius: '10px', border: '1px solid transparent', outline: 'none',
+              fontSize: '15px', color: '#000', boxSizing: 'border-box'
+            }}
+            onFocus={e => (e.target.style.borderColor = '#007AFF')}
+            onBlur={e => (e.target.style.borderColor = 'transparent')}
+          />
+          <button
+            onClick={() => setSearch('')}
+            style={{
+              padding: '10px 16px', borderRadius: '20px', border: 'none',
+              backgroundColor: '#F2F2F7', fontSize: '14px', fontWeight: 500,
+              color: search ? '#007AFF' : '#8E8E93',
+              cursor: 'pointer', whiteSpace: 'nowrap'
+            }}
+          >
+            Temizle
+          </button>
         </div>
       </div>
 
-      {/* Liste */}
-      <div style={card}>
+      {/* Müşteri Listesi */}
+      <div style={{ backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <p style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>Müşteriler</p>
-          <button onClick={loadCustomers} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '10px', border: 'none', backgroundColor: '#F2F2F7', fontSize: '13px', cursor: 'pointer' }}>
-            🔄 Yenile
+          <p style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#000' }}>Müşteriler</p>
+          <button
+            onClick={loadCustomers}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '6px 14px', borderRadius: '20px', border: 'none',
+              backgroundColor: '#F2F2F7', fontSize: '14px', fontWeight: 500,
+              color: '#007AFF', cursor: 'pointer'
+            }}
+          >
+            <span style={{ display: 'inline-block', fontSize: '13px' }}>↻</span> Yenile
           </button>
         </div>
 
         {loading ? (
-          <p style={{ color: '#6C6C70', textAlign: 'center', padding: '24px 0' }}>Yükleniyor...</p>
+          <p style={{ color: '#6C6C70', textAlign: 'center', padding: '32px 0' }}>Yükleniyor...</p>
         ) : filtered.length === 0 ? (
-          <p style={{ color: '#6C6C70', textAlign: 'center', padding: '24px 0' }}>Müşteri bulunamadı.</p>
+          <p style={{ color: '#6C6C70', textAlign: 'center', padding: '32px 0' }}>Müşteri bulunamadı.</p>
         ) : filtered.map((customer, idx) => {
           const isExpanded = expandedIds.has(customer.id)
           const petCount = customer.pets?.length ?? 0
-          const initial = customer.full_name?.charAt(0)?.toUpperCase() ?? '?'
 
           return (
             <div key={customer.id}>
-              {idx > 0 && <div style={{ height: '1px', backgroundColor: '#F2F2F7', margin: '4px 0' }} />}
-              <div style={{ padding: '10px 0' }}>
-<div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} onClick={() => toggleExpand(customer.id)}>
-  <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '15px', fontWeight: 700, flexShrink: 0 }}>
-    {initial}
-  </div>
-  <div style={{ flex: 1 }}>
-    <p
-      onClick={e => { e.stopPropagation(); router.push(`/dashboard/customers/${customer.id}`) }}
-      style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 2px', color: '#007AFF', cursor: 'pointer', display: 'inline-block' }}
-    >
-      {customer.full_name}
-    </p>
-    {customer.tckn && <p style={{ fontSize: '12px', color: '#6C6C70', margin: '0 0 1px' }}>TCKN: {customer.tckn}</p>}
-    <p style={{ fontSize: '12px', color: '#6C6C70', margin: 0 }}>{customer.phone}</p>
-  </div>
-  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-    <span style={{ fontSize: '12px', color: '#6C6C70' }}>{petCount} hayvan</span>
-    <span style={{ color: '#6C6C70', fontSize: '14px' }}>{isExpanded ? '▲' : '▼'}</span>
-  </div>
-</div>
+              {idx > 0 && <div style={{ height: '1px', backgroundColor: '#E5E5EA', margin: '0' }} />}
+              <div style={{ padding: '12px 0' }}>
 
-                {/* Evcil hayvanlar */}
+                {/* Müşteri Satırı */}
+                <div
+                  style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}
+                  onClick={() => toggleExpand(customer.id)}
+                >
+                  {/* iOS person.fill ikonu */}
+                  <div style={{
+                    width: '34px', height: '34px', borderRadius: '50%',
+                    backgroundColor: '#EBF4FF', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', flexShrink: 0, marginTop: '2px'
+                  }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#007AFF">
+                      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                    </svg>
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+<p
+  onClick={e => { e.stopPropagation(); router.push(`/dashboard/customers/${customer.id}`) }}
+  style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 2px', color: '#007AFF', cursor: 'pointer', display: 'inline-block' }}
+>
+  {customer.full_name}
+</p>
+                    {customer.tckn && (
+                      <p style={{ fontSize: '13px', color: '#8E8E93', margin: '0 0 1px' }}>TCKN: {customer.tckn}</p>
+                    )}
+                    {customer.phone && (
+                      <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>{customer.phone}</p>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '13px', color: '#8E8E93' }}>{petCount} hayvan</span>
+                    <span style={{ fontSize: '16px', color: '#C7C7CC', lineHeight: 1 }}>{isExpanded ? '∧' : '∨'}</span>
+                  </div>
+                </div>
+
+                {/* Evcil Hayvanlar */}
                 {isExpanded && petCount > 0 && (
-                  <div style={{ marginTop: '8px', paddingLeft: '48px' }}>
+                  <div style={{ marginTop: '8px', paddingLeft: '46px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {customer.pets.map((pet: any) => {
-                      const { icon, color } = speciesIcon(pet.species ?? '')
+                      const { emoji, bgColor, label: specLabel } = speciesInfo(pet.species ?? '')
                       const age = calcAge(pet.birth_date)
-                      const speciesLabel = pet.species?.toLowerCase().includes('dog') || pet.species?.toLowerCase().includes('kopek') ? 'Köpek' :
-                        pet.species?.toLowerCase().includes('cat') || pet.species?.toLowerCase().includes('kedi') ? 'Kedi' : pet.species ?? ''
-                      const genderLabel = pet.gender === 'male' || pet.gender === 'Erkek' ? 'Erkek' :
-                        pet.gender === 'female' || pet.gender === 'Dişi' ? 'Dişi' : ''
+                      const gl = genderLabel(pet.gender)
+                      const subtitle = [gl, age].filter(Boolean).join(' • ')
 
                       return (
-                        <div key={pet.id} onClick={() => router.push(`/dashboard/pets/${pet.id}`)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', backgroundColor: '#EBF4FF', borderRadius: '12px', marginBottom: '6px', cursor: 'pointer' }}>
-                          <span style={{ fontSize: '24px' }}>{icon}</span>
+                        <div
+                          key={pet.id}
+                          onClick={() => router.push(`/dashboard/pets/${pet.id}`)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            padding: '10px 12px', backgroundColor: '#EBF4FF',
+                            borderRadius: '12px', cursor: 'pointer'
+                          }}
+                        >
+                          <div style={{
+                            width: '36px', height: '36px', borderRadius: '10px',
+                            backgroundColor: bgColor, display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: '20px', flexShrink: 0
+                          }}>
+                            {emoji}
+                          </div>
+
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <p style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{pet.name}</p>
-                              <p style={{ fontSize: '13px', color: '#6C6C70', margin: 0 }}>{speciesLabel}{pet.breed ? ` • ${pet.breed}` : ''}</p>
-                            </div>
-                            {(genderLabel || age) && (
-                              <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>
-                                {[genderLabel, age].filter(Boolean).join(' • ')}
+                              <p style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#000' }}>{pet.name}</p>
+                              <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>
+                                {specLabel}{pet.breed ? ` • ${pet.breed}` : ''}
                               </p>
+                            </div>
+                            {subtitle && (
+                              <p style={{ fontSize: '13px', color: '#8E8E93', margin: '2px 0 0' }}>{subtitle}</p>
                             )}
                           </div>
                         </div>

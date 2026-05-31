@@ -28,9 +28,10 @@ const navSections = [
     title: 'Konaklama Yonetimi',
     items: [
       { href: '/dashboard/stays/checkin', label: 'Check-in', icon: '⬇️' },
-     { href: '/dashboard/stays', label: 'Uzun Konaklama', icon: '🏨' },
+     { href: '/dashboard/stays', label: 'Uzun Konaklama', icon: '🗓️' },
       { href: '/dashboard/stays/checkout', label: 'Check-out', icon: '⬆️' },
       { href: '/dashboard/stays/reservations', label: 'Rezervasyonlar', icon: '📅' },
+      { href: '/dashboard/stays/history', label: 'Geçmiş', icon: '🕐' },
     ]
   },
 {
@@ -55,14 +56,14 @@ const navSections = [
       { href: '/dashboard/accounting', label: 'Genel Durum', icon: '📋' },
       { href: '/dashboard/accounting/sales', label: 'Satislar', icon: '📄' },
       { href: '/dashboard/accounting/expenses', label: 'Giderler', icon: '➖' },
-      { href: '/dashboard/accounting/payments', label: 'Musteriler', icon: '👥' },
+      { href: '/dashboard/customers', label: 'Musteriler', icon: '👥' },
     ]
   },
   {
     title: 'Satis & Stok',
     items: [
       { href: '/dashboard/sales', label: 'Hizli Satis', icon: '🛒' },
-      { href: '/dashboard/stock', label: 'Urun Listesi', icon: '📦' },
+      { href: '/dashboard/stock', label: 'Stok Yonetimi', icon: '📦' },
     ]
   },
   {

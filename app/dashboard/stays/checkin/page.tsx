@@ -12,21 +12,32 @@ export default function CheckinPage() {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedPet, setSelectedPet] = useState<any>(null)
   const [businessId, setBusinessId] = useState<string>('')
+  const [reservations, setReservations] = useState<any[]>([])
   const [form, setForm] = useState({
-    check_in_date: new Date().toISOString().split('T')[0],
+    check_in_date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
     daily_price: '',
   })
 
-  useEffect(() => {
-    async function loadBusiness() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: business } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
-      setBusinessId(business?.id ?? '')
-    }
-    loadBusiness()
-  }, [])
+useEffect(() => {
+  async function loadBusiness() {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: business } = await supabase.from('businesses').select('id').eq('owner_user_id', user.id).single()
+    const bid = business?.id ?? ''
+    setBusinessId(bid)
+
+    const { data: resData } = await supabase
+      .from('stays')
+      .select('id, pet_id, check_in_date, planned_check_out_date, daily_price, notes, pets(id, name, species, breed, owner_full_name, owner_phone, customers(full_name, phone))')
+      .eq('business_id', bid)
+      .eq('is_reservation', true)
+      .is('actual_check_out_date', null)
+      .order('check_in_date')
+    setReservations(resData ?? [])
+  }
+  loadBusiness()
+}, [])
 
   useEffect(() => {
     if (!search.trim() || !businessId) { setSearchResults([]); return }
@@ -54,13 +65,28 @@ export default function CheckinPage() {
     setForm({ check_in_date: new Date().toISOString().split('T')[0], daily_price: '' })
   }
 
-  async function handleStart() {
-    if (!selectedPet) { setError('Once bir evcil hayvan secin.'); return }
-    const daily = parseFloat(form.daily_price.replace(',', '.')) || 0
-    if (daily <= 0) { setError('Gunluk ucret 0\'dan buyuk olmali.'); return }
-    setLoading(true)
-    setError('')
-    const supabase = createClient()
+async function handleStart() {
+  if (!selectedPet) { setError('Once bir evcil hayvan secin.'); return }
+  const daily = parseFloat(form.daily_price.replace(',', '.')) || 0
+  if (daily <= 0) { setError('Gunluk ucret 0\'dan buyuk olmali.'); return }
+  setLoading(true)
+  setError('')
+  const supabase = createClient()
+
+  // Seçili hayvanın bekleyen rezervasyonu var mı kontrol et
+  const existingReservation = reservations.find(r => r.pet_id === selectedPet.id)
+
+  if (existingReservation) {
+    // Rezervasyonu aktif konaklamaya çevir
+    const { error } = await supabase.from('stays').update({
+      is_reservation: false,
+      check_in_date: form.check_in_date,
+      daily_price: daily,
+      planned_check_out_date: null,
+    }).eq('id', existingReservation.id)
+    if (error) { setError(error.message); setLoading(false); return }
+  } else {
+    // Yeni konaklama oluştur
     const { error } = await supabase.from('stays').insert({
       business_id: businessId,
       pet_id: selectedPet.id,
@@ -69,9 +95,11 @@ export default function CheckinPage() {
       daily_price: daily,
     })
     if (error) { setError(error.message); setLoading(false); return }
-    router.push('/dashboard/stays')
-    router.refresh()
   }
+
+  router.push('/dashboard/stays')
+  router.refresh()
+}
 
   const dailyPrice = parseFloat(form.daily_price.replace(',', '.')) || 0
   const formattedPrice = dailyPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })
@@ -108,7 +136,48 @@ export default function CheckinPage() {
         Konaklama Girisi
       </h1>
 
-      {/* Kayittan Getir */}
+{/* Bekleyen Rezervasyonlar */}
+{reservations.length > 0 && (
+  <div style={cardStyle}>
+    <p style={sectionTitleStyle}>Bekleyen Rezervasyonlar</p>
+    {reservations.map((r, idx) => {
+      const s = (r.pets?.species ?? '').toLowerCase()
+      const emoji = s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇'
+      const ownerName = r.pets?.owner_full_name || r.pets?.customers?.full_name || ''
+      const ci = r.check_in_date?.split('T')[0] ?? ''
+      const co = r.planned_check_out_date?.split('T')[0] ?? ''
+      const todayStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]
+      const isOverdue = ci < todayStr
+      const isToday = ci === todayStr
+      return (
+        <div
+          key={r.id}
+          onClick={() => {
+            setSelectedPet(r.pets)
+            setSearch(r.pets?.name ?? '')
+            setSearchResults([])
+            setForm(prev => ({ ...prev, check_in_date: ci || prev.check_in_date, daily_price: String(r.daily_price || '') }))
+          }}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 4px', borderBottom: idx < reservations.length - 1 ? '1px solid #E5E5EA' : 'none', cursor: 'pointer' }}
+        >
+          <span style={{ fontSize: '22px', marginTop: '2px' }}>{emoji}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+              <p style={{ fontSize: '15px', fontWeight: 700, color: '#000', margin: 0 }}>{r.pets?.name ?? 'İsimsiz'}</p>
+              {isOverdue && <span style={{ fontSize: '11px', backgroundColor: '#FF3B3020', color: '#FF3B30', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Geciken</span>}
+              {isToday && !isOverdue && <span style={{ fontSize: '11px', backgroundColor: '#34C75920', color: '#34C759', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Bugün</span>}
+            </div>
+            <p style={{ fontSize: '12px', color: '#6C6C70', margin: '0 0 2px' }}>{[ownerName, r.pets?.breed].filter(Boolean).join(' • ')}</p>
+            <p style={{ fontSize: '12px', color: '#6C6C70', margin: 0 }}>{fmtDate(ci)} → {fmtDate(co)} • ₺{r.daily_price}/gün</p>
+          </div>
+          <span style={{ color: '#C7C7CC', fontSize: '16px' }}>›</span>
+        </div>
+      )
+    })}
+  </div>
+)}
+
+{/* Kayittan Getir */}
       <div style={cardStyle}>
         <p style={sectionTitleStyle}>Kayittan Getir</p>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -163,7 +232,9 @@ export default function CheckinPage() {
                   backgroundColor: '#fff',
                 }}
               >
-                <span style={{ fontSize: '18px' }}>{pet.species === 'cat' ? '🐱' : '🐶'}</span>
+                <span style={{ fontSize: '18px' }}>
+  {(() => { const s = (pet.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇' })()}
+</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: 0 }}>{pet.name}</p>
                   <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>
@@ -192,7 +263,9 @@ export default function CheckinPage() {
         <div style={cardStyle}>
           <p style={sectionTitleStyle}>Secili Evcil</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '4px 0' }}>
-            <span style={{ fontSize: '24px' }}>{selectedPet.species === 'cat' ? '🐱' : '🐶'}</span>
+            <span style={{ fontSize: '24px' }}>
+  {(() => { const s = (selectedPet.species ?? '').toLowerCase(); return s === 'cat' || s === 'kedi' ? '🐈' : s === 'dog' || s === 'köpek' ? '🐕' : '🐇' })()}
+</span>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: '16px', fontWeight: 600, color: '#000', margin: 0 }}>{selectedPet.name}</p>
               <p style={{ fontSize: '14px', color: '#6C6C70', margin: '3px 0 0' }}>
@@ -302,4 +375,10 @@ export default function CheckinPage() {
       )}
     </div>
   )
+
+  function fmtDate(s?: string) {
+  if (!s) return '?'
+  const [y, m, d] = s.split('-')
+  return `${d}.${m}.${y}`
+}
 }

@@ -80,10 +80,13 @@ function fmtDate(iso: string) {
   }
 
   const filtered = entries.filter(e => {
-    if (!search.trim()) return true
-    const q = search.toLowerCase()
-    return e.pet_name?.toLowerCase().includes(q) || e.owner_name?.toLowerCase().includes(q) || e.notes?.toLowerCase().includes(q)
-  })
+  if (!search.trim()) return true
+  const q = search.toLowerCase()
+  return e.pet_name?.toLowerCase().includes(q) ||
+    e.owner_name?.toLowerCase().includes(q) ||
+    e.notes?.toLowerCase().includes(q) ||
+    (e as any).owner_phone?.toLowerCase().includes(q)
+})
 
   function groupBy(key: GroupMode) {
     const groups: Record<string, Entry[]> = {}
@@ -131,7 +134,7 @@ function fmtDate(iso: string) {
       <div style={cardStyle}>
         <p style={sectionTitle}>Ara ve Filtrele</p>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Hayvan adi / sahip adi' style={{ flex: 1, padding: '8px 12px', backgroundColor: '#F2F2F7', borderRadius: '10px', border: 'none', outline: 'none', fontSize: '15px' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Hayvan adı / sahip adı / telefon' style={{ flex: 1, padding: '8px 12px', backgroundColor: '#F2F2F7', borderRadius: '10px', border: 'none', outline: 'none', fontSize: '15px' }} />
           <button onClick={() => setSearch('')} disabled={!search} style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid #E5E5EA', backgroundColor: '#fff', color: '#6C6C70', fontSize: '14px', cursor: 'pointer', opacity: search ? 1 : 0.5 }}>Temizle</button>
         </div>
         <div style={{ height: '1px', backgroundColor: '#E5E5EA', marginBottom: '14px' }} />
@@ -224,9 +227,9 @@ function fmtDate(iso: string) {
                 {groups[key].map(entry => (
                   <div key={entry.id} onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)} style={{ backgroundColor: '#F2F2F7', borderRadius: '12px', padding: '12px 14px', marginBottom: '8px', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: entry.species === 1 ? '#FF950020' : '#007AFF20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
-                        {entry.species === 1 ? '🐱' : '🐶'}
-                      </div>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: entry.species === 1 ? '#FF950020' : entry.species === 0 ? '#007AFF20' : '#9B59B620', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+  {entry.species === 1 ? '🐈' : entry.species === 0 ? '🐕' : '🐇'}
+</div>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: 0 }}>{entry.pet_name}</p>
                         <p style={{ fontSize: '12px', color: '#6C6C70', margin: '2px 0 0' }}>{entry.owner_name}</p>
