@@ -226,7 +226,7 @@ export default function SettingsPage() {
 
         <p style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 10px' }}>Plan Yönetimi</p>
         <div style={{ display: 'flex', backgroundColor: '#F2F2F7', borderRadius: '12px', padding: '4px', marginBottom: '16px' }}>
-          {['Free', 'Premium', 'Business AI'].map(p => (
+          {['Free', 'Premium'].map(p => (
             <button key={p} onClick={() => setAiPlan(p)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: aiPlan === p ? '#fff' : 'transparent', fontSize: '13px', fontWeight: aiPlan === p ? 700 : 400, cursor: 'pointer', boxShadow: aiPlan === p ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
               {p}
             </button>
