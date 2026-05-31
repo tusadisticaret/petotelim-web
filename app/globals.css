@@ -3,3 +3,546 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+.site-shell {
+  min-height: 100vh;
+  background: #f7f8fa;
+  color: #111111;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px 72px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+  padding: 12px 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand-logo {
+  height: 40px;
+  width: auto;
+}
+
+.brand-text {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #111111;
+  font-weight: 600;
+}
+
+.nav-button,
+.lang-button,
+.primary-button,
+.secondary-button,
+.cta-button,
+.outline-button {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  font-weight: 700;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nav-button:hover,
+.lang-button:hover,
+.primary-button:hover,
+.secondary-button:hover,
+.cta-button:hover,
+.outline-button:hover {
+  transform: translateY(-1px);
+  opacity: 0.96;
+}
+
+.nav-button {
+  background: #111111;
+  color: white;
+  padding: 10px 14px;
+}
+
+.lang-button {
+  color: #111111;
+  border: 1px solid #dddddd;
+  padding: 10px 14px;
+  background: white;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+  margin-top: 16px;
+}
+
+.card {
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.badge {
+  display: inline-block;
+  background: #eef6ff;
+  color: #155eef;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.hero-title {
+  font-size: 56px;
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.hero-text {
+  font-size: 19px;
+  line-height: 1.7;
+  color: #555555;
+  margin-top: 20px;
+  max-width: 680px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.primary-button {
+  background: #111111;
+  color: white;
+  padding: 15px 22px;
+  border: none;
+  cursor: pointer;
+}
+
+.secondary-button {
+  background: #16a34a;
+  color: white;
+  padding: 15px 22px;
+}
+
+.outline-button {
+  border: 1px solid #d1d5db;
+  color: #111111;
+  background: white;
+  padding: 15px 22px;
+}
+
+.hero-points {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  color: #666666;
+  font-size: 15px;
+}
+
+.dashboard-card {
+  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+  border-radius: 24px;
+  padding: 24px;
+  color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-label {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 16px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.stat-box {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.stat-title {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+.benefit-box {
+  margin-top: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.section {
+  margin-top: 80px;
+}
+
+.section-title {
+  font-size: 34px;
+  margin: 0 0 22px;
+  letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+  color: #555555;
+  font-size: 18px;
+  line-height: 1.7;
+  max-width: 760px;
+  margin: 0 0 26px;
+}
+
+.features-grid,
+.pricing-grid,
+.faq-grid,
+.trust-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.features-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pricing-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.faq-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trust-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.feature-card,
+.pricing-card,
+.faq-card,
+.trust-card {
+  background: white;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.feature-card h3,
+.pricing-card h3,
+.faq-card h3,
+.trust-card h3 {
+  margin-top: 0;
+  font-size: 22px;
+}
+
+.feature-card p,
+.faq-card p,
+.trust-card p {
+  color: #666666;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+.pricing-card {
+  position: relative;
+}
+
+.pricing-card.featured {
+  border: 2px solid #111111;
+}
+
+.pricing-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #111111;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.price {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 12px 0 4px;
+}
+
+.price-note {
+  color: #666666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.pricing-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #555555;
+  line-height: 1.8;
+}
+
+.about-card {
+  background: white;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.about-card p {
+  color: #555555;
+  font-size: 18px;
+  line-height: 1.7;
+  margin-bottom: 0;
+  max-width: 850px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.form-field label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  font-size: 16px;
+  outline: none;
+  background: white;
+}
+
+.form-field textarea {
+  resize: vertical;
+}
+
+.form-note {
+  color: #666666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.cta-section {
+  margin-top: 80px;
+  text-align: center;
+  background: #111111;
+  color: white;
+  border-radius: 28px;
+  padding: 44px 20px;
+}
+
+.cta-section p {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 760px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.cta-button {
+  margin-top: 24px;
+  background: #16a34a;
+  color: white;
+  padding: 15px 26px;
+}
+
+.footer {
+  margin-top: 36px;
+  padding-top: 22px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: #666666;
+  font-size: 14px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-brandline {
+  font-weight: 600;
+  color: #444444;
+  margin-top: 6px;
+}
+
+.legal-page,
+.thankyou-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  color: #111111;
+}
+
+.legal-container,
+.thankyou-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  line-height: 1.7;
+}
+
+.back-link {
+  text-decoration: none;
+  color: #555555;
+}
+
+.legal-title,
+.thankyou-title {
+  font-size: 42px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.legal-container h2 {
+  margin-top: 28px;
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.legal-container p,
+.thankyou-container p {
+  margin-top: 0;
+  color: #333333;
+}
+
+.thankyou-card {
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  margin-top: 24px;
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .features-grid,
+  .pricing-grid,
+  .faq-grid,
+  .trust-grid,
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-title {
+    font-size: 44px;
+  }
+
+  .section-title {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 18px 14px 56px;
+  }
+
+  .card,
+  .dashboard-card,
+  .about-card,
+  .feature-card,
+  .pricing-card,
+  .faq-card,
+  .trust-card,
+  .thankyou-card {
+    padding: 22px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+  }
+
+  .hero-text,
+  .about-card p,
+  .cta-section p,
+  .section-subtitle {
+    font-size: 16px;
+  }
+
+  .brand-text {
+    font-size: 22px;
+  }
+
+  .section-title {
+    font-size: 28px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nav {
+    gap: 6px;
+  }
+
+  .nav-link {
+    font-size: 14px;
+  }
+
+  .nav-button,
+  .lang-button {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+}
