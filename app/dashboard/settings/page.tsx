@@ -34,11 +34,9 @@ export default function SettingsPage() {
     setDogCapacity(biz.dog_capacity ?? 0)
     setCatCapacity(biz.cat_capacity ?? 0)
     if (biz.logo_url) {
-const { data: urlData, error: urlErr } = await supabase.storage
+const { data: urlData } = await supabase.storage
   .from('pet-media')
   .createSignedUrl(biz.logo_url, 3600 * 24)
-console.log('Logo URL:', urlData?.signedUrl)
-console.log('Logo Error:', urlErr)
 setLogoUrl(urlData?.signedUrl ?? null)
 } else {
   setLogoUrl(null)
