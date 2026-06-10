@@ -211,7 +211,7 @@ export default function Home() {
               <div className="form-row">
                 <div className="form-field">
                   <label htmlFor="phone">Telefon</label>
-                  <input id="phone" name="phone" type="tel" required placeholder="05xx xxx xx xx" />
+                  <input id="phone" name="phone" type="tel" placeholder="05xx xxx xx xx (İsteğe bağlı)" />
                 </div>
                 <div className="form-field">
                   <label htmlFor="email">E-posta</label>
