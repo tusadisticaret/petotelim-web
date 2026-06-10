@@ -117,45 +117,50 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="pricing" className="section">
-          <h2 className="section-title">Fiyatlandırma</h2>
-          <p className="section-subtitle">
-            Başlangıç için örnek paket yapısı. Gerçek fiyatları daha sonra birlikte netleştiririz.
-          </p>
-          <div className="pricing-grid">
-            <div className="pricing-card">
-              <h3>Başlangıç</h3>
-              <div className="price">Yakında</div>
-              <div className="price-note">Küçük işletmeler için</div>
-              <ul className="pricing-list">
-                <li>Temel müşteri kaydı</li>
-                <li>Temel konaklama takibi</li>
-                <li>Basit raporlama</li>
-              </ul>
-            </div>
-            <div className="pricing-card featured">
-              <div className="pricing-badge">Önerilen</div>
-              <h3>Profesyonel</h3>
-              <div className="price">Yakında</div>
-              <div className="price-note">Büyüyen işletmeler için</div>
-              <ul className="pricing-list">
-                <li>Rezervasyon ve operasyon akışı</li>
-                <li>Gelir ve ödeme takibi</li>
-                <li>Daha gelişmiş raporlama</li>
-              </ul>
-            </div>
-            <div className="pricing-card">
-              <h3>Kurumsal</h3>
-              <div className="price">Özel Teklif</div>
-              <div className="price-note">Daha büyük yapılar için</div>
-              <ul className="pricing-list">
-                <li>Özel ihtiyaç analizi</li>
-                <li>Genişletilmiş destek</li>
-                <li>Özelleştirme seçenekleri</li>
-              </ul>
-            </div>
-          </div>
-        </section>
+<section id="pricing" className="section">
+  <h2 className="section-title">Fiyatlandırma</h2>
+  <p className="section-subtitle">
+    PetOtelim iOS uygulaması App Store üzerinden indirilebilir.
+  </p>
+  <div className="pricing-grid">
+    <div className="pricing-card">
+      <h3>Ücretsiz Plan</h3>
+      <div className="price">₺0</div>
+      <div className="price-note">Temel özellikler</div>
+      <ul className="pricing-list">
+        <li>Konaklama yönetimi</li>
+        <li>Müşteri ve pet kaydı</li>
+        <li>Grooming ve kreş takibi</li>
+        <li>Günlük AI limiti ile AI asistan</li>
+      </ul>
+    </div>
+    <div className="pricing-card featured">
+      <div className="pricing-badge">Önerilen</div>
+      <h3>Premium</h3>
+      <div className="price">₺599,99<span style={{fontSize: 16, fontWeight: 400}}>/ay</span></div>
+      <div className="price-note">Tüm özellikler açık</div>
+      <ul className="pricing-list">
+        <li>Sınırsız AI asistan kullanımı</li>
+        <li>Tüm modüller tam erişim</li>
+        <li>Web dashboard erişimi</li>
+        <li>Öncelikli destek</li>
+      </ul>
+    </div>
+    <div className="pricing-card">
+      <h3>Kurumsal</h3>
+      <div className="price">Özel Teklif</div>
+      <div className="price-note">Çok lokasyonlu yapılar için</div>
+      <ul className="pricing-list">
+        <li>Özel ihtiyaç analizi</li>
+        <li>Genişletilmiş destek</li>
+        <li>Özelleştirme seçenekleri</li>
+      </ul>
+    </div>
+  </div>
+  <p style={{textAlign: "center", marginTop: 24, color: "#666", fontSize: 14}}>
+    Abonelik App Store üzerinden yönetilir. Otomatik yenileme, mevcut dönem bitmeden 24 saat önce iptal edilebilir.
+  </p>
+</section>
 
         <section id="about" className="section">
           <div className="about-card">
