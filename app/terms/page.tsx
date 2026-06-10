@@ -9,47 +9,83 @@ export default function TermsPage() {
         <h1 className="legal-title">Kullanım Şartları</h1>
 
         <p>
-          Bu web sitesini kullanarak aşağıdaki kullanım şartlarını kabul etmiş
-          sayılırsınız.
+          PetOtelim uygulamasını ve web sitesini kullanarak aşağıdaki kullanım
+          şartlarını kabul etmiş sayılırsınız.
         </p>
 
         <h2>Genel Kullanım</h2>
         <p>
-          PetOtelim web sitesi, ürün ve hizmetler hakkında bilgi vermek,
-          tanıtım yapmak ve demo talepleri toplamak amacıyla sunulmaktadır.
-          Site içeriği önceden haber verilmeksizin güncellenebilir.
+          PetOtelim, pet otel işletmecilerine yönelik bir yönetim uygulamasıdır.
+          Uygulama; konaklama, tıraş, kreş, muhasebe ve AI asistan özelliklerini
+          kapsamaktadır.
+        </p>
+
+        <h2>Premium Abonelik</h2>
+        <p>
+          PetOtelim, otomatik yenilenen aylık abonelik sunar:
+        </p>
+        <ul>
+          <li><strong>Abonelik adı:</strong> Pet Otelim Premium</li>
+          <li><strong>Abonelik süresi:</strong> 1 ay</li>
+          <li><strong>Fiyat:</strong> 599,99 TL / ay</li>
+          <li>
+            <strong>Otomatik yenileme:</strong> Abonelik, mevcut dönem sona
+            ermeden en az 24 saat önce iptal edilmediği sürece otomatik olarak
+            yenilenir.
+          </li>
+          <li>
+            <strong>Ücret tahsilatı:</strong> Yenileme ücreti, mevcut dönem
+            sona ermeden 24 saat önce iTunes/App Store hesabınızdan tahsil
+            edilir.
+          </li>
+          <li>
+            <strong>İptal:</strong> Aboneliği istediğiniz zaman App Store hesap
+            ayarlarınızdan iptal edebilirsiniz. İptal, mevcut dönem sonunda
+            geçerli olur.
+          </li>
+          <li>
+            <strong>Ücretsiz deneme:</strong> Ücretsiz deneme süresi varsa,
+            kullanılmayan kısım satın alım onaylandığında geçersiz sayılır.
+          </li>
+        </ul>
+
+        <h2>Abonelik Yönetimi</h2>
+        <p>
+          Aboneliğinizi yönetmek veya iptal etmek için: iPhone/iPad
+          Ayarlar → Apple ID → Abonelikler yolunu izleyin.
         </p>
 
         <h2>İçerik ve Fikri Haklar</h2>
         <p>
-          Sitede yer alan tüm yazılar, görseller, logolar, marka unsurları ve
-          diğer içerikler ilgili haklara tabidir. İzinsiz kopyalanması,
-          çoğaltılması veya ticari amaçla kullanılması uygun değildir.
-        </p>
-
-        <h2>Bilgi Doğruluğu</h2>
-        <p>
-          Web sitesindeki bilgilerin doğruluğu için özen gösterilse de tüm
-          içerik mevcut haliyle sunulmaktadır. Sunulan içerikler bağlayıcı bir
-          taahhüt niteliği taşımayabilir.
+          Uygulamada ve web sitesinde yer alan tüm içerikler, logolar ve marka
+          unsurları ilgili haklara tabidir. İzinsiz kopyalanması veya ticari
+          amaçla kullanılması yasaktır.
         </p>
 
         <h2>Hizmet Değişiklikleri</h2>
         <p>
-          PetOtelim, ürünlerinde, hizmetlerinde, paketlerinde ve web sitesi
-          içeriğinde değişiklik yapma hakkını saklı tutar.
+          PetOtelim, uygulama özelliklerinde, abonelik fiyatlarında ve içeriğinde
+          değişiklik yapma hakkını saklı tutar. Fiyat değişiklikleri önceden
+          bildirilir.
         </p>
 
-        <h2>Üçüncü Taraf Hizmetler</h2>
+        <h2>Sorumluluk Sınırlaması</h2>
         <p>
-          Web sitesi bazı üçüncü taraf altyapılar veya servislerle entegre
-          çalışabilir. Bu servislerin kullanımı kendi şartlarına tabi olabilir.
+          PetOtelim, uygulamanın kesintisiz veya hatasız çalışacağını garanti
+          etmez. Uygulama kullanımından doğabilecek veri kayıpları için azami
+          özen gösterilir.
+        </p>
+
+        <h2>Gizlilik</h2>
+        <p>
+          Kişisel verilerinizin işlenmesi hakkında bilgi almak için{" "}
+          <a href="/privacy">Gizlilik Politikamızı</a> inceleyiniz.
         </p>
 
         <h2>İletişim</h2>
         <p>
-          Kullanım şartlarıyla ilgili sorularınız için bizimle iletişime
-          geçebilirsiniz.
+          Kullanım şartlarıyla ilgili sorularınız için:{" "}
+          <a href="mailto:info@petotelim.app">info@petotelim.app</a>
         </p>
       </div>
     </main>
