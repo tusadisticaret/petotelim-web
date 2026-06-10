@@ -146,16 +146,6 @@ export default function Home() {
         <li>Öncelikli destek</li>
       </ul>
     </div>
-    <div className="pricing-card">
-      <h3>Kurumsal</h3>
-      <div className="price">Özel Teklif</div>
-      <div className="price-note">Çok lokasyonlu yapılar için</div>
-      <ul className="pricing-list">
-        <li>Özel ihtiyaç analizi</li>
-        <li>Genişletilmiş destek</li>
-        <li>Özelleştirme seçenekleri</li>
-      </ul>
-    </div>
   </div>
   <p style={{textAlign: "center", marginTop: 24, color: "#666", fontSize: 14}}>
     Abonelik App Store üzerinden yönetilir. Otomatik yenileme, mevcut dönem bitmeden 24 saat önce iptal edilebilir.
