@@ -26,6 +26,24 @@ export async function GET(request: NextRequest) {
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as any })
     if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const meta = user.user_metadata
+        const { data: existing } = await supabase
+          .from('businesses')
+          .select('id')
+          .eq('owner_user_id', user.id)
+          .single()
+
+        if (!existing) {
+          await supabase.from('businesses').insert({
+            owner_user_id: user.id,
+            name: meta.business_name || 'İşletmem',
+            owner_full_name: meta.full_name || '',
+            owner_email: user.email,
+          })
+        }
+      }
       return NextResponse.redirect(`${origin}/dashboard`)
     }
   }
