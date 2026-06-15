@@ -19,16 +19,29 @@ export default function SignupPage() {
     setLoading(true)
     setError('')
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, business_name: businessName }
-      }
+const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: { full_name: fullName, business_name: businessName }
+  }
+})
+if (error) { setError(error.message); setLoading(false); return }
+
+if (data.user) {
+  const { error: bizError } = await supabase
+    .from('businesses')
+    .insert({
+      owner_user_id: data.user.id,
+      name: businessName,
+      owner_full_name: fullName,
+      owner_email: email,
     })
-    if (error) { setError(error.message); setLoading(false); return }
-    setSuccess(true)
-    setLoading(false)
+  if (bizError) { setError('İşletme oluşturulamadı: ' + bizError.message); setLoading(false); return }
+}
+
+setSuccess(true)
+setLoading(false)
   }
 
   if (success) {
