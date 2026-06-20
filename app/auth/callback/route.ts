@@ -23,9 +23,13 @@ export async function GET(request: NextRequest) {
     }
   )
 
-  if (token_hash && type) {
+if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as any })
     if (!error) {
+      if (type === 'recovery') {
+        return NextResponse.redirect(`${origin}/auth/reset-password`)
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const meta = user.user_metadata
